@@ -1,0 +1,8 @@
+{
+    "crons": [
+        {
+            "path": "/api/scrapeDaily",
+            "schedule": "0 2 * * 1-5"
+        }
+    ]
+}
