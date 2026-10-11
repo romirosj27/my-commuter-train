@@ -4,7 +4,7 @@
 import { associations, commutes, incidents, networkEvents, serviceCalls, services, user, type DbHandle } from '@mct/db';
 import { freshTestDb } from '@mct/db/testing';
 import { fromLondon, type DarwinEvent } from '@mct/shared';
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq } from '@mct/db/orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { MockIncidentsFeed } from '../src/feeds/incidents/mock.ts';
 import { ScenarioLibrary } from '../src/feeds/mock/library.ts';

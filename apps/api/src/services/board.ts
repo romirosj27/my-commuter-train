@@ -9,7 +9,7 @@ import {
   type ServiceDetail,
   type StoredCall,
 } from '@mct/shared';
-import { aliasedTable, and, asc, eq, gt, gte, inArray, lt, ne } from 'drizzle-orm';
+import { aliasedTable, and, asc, eq, gt, gte, inArray, lt, ne } from '@mct/db/orm';
 import type { ReferenceCache } from './reference.ts';
 
 export interface BoardQuery {

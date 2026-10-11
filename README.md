@@ -11,7 +11,8 @@ env vars) arrives in Phase 8.
 
 - Phase 1 (done): monorepo scaffold, docker-compose, database schema, reference data and mock feed adapters.
 - Phase 2 (done): worker ingest from the mock feeds, and the live board API.
-- Next: auth and commute setup (Phase 3); `apps/web` arrives in Phases 3–4.
+- Phase 3 (done): accounts (Better Auth, email verification, password reset, GDPR export and deletion) and commute setup, in the API and web app.
+- Next: live board UI and service detail (Phase 4).
 
 ## Local setup
 
@@ -22,26 +23,22 @@ pnpm install
 cp .env.example .env
 docker compose up -d            # postgres + redis (add --profile mail for mailpit)
 pnpm db:migrate                 # creates pg_trgm and applies migrations
-pnpm db:seed                    # reference data + placeholder Delay Repay schemes
+pnpm db:seed                    # reference data, placeholder Delay Repay schemes, demo users
 pnpm typecheck && pnpm test
 ```
 
-## Running the worker and API
+## Running the app
 
 ```bash
+pnpm dev:api       # http://localhost:8080 (auth emails are printed to this log in dev)
 pnpm dev:worker    # ingest + maintenance jobs; health on :8081/health
-pnpm dev:api       # http://localhost:8080
+pnpm dev:web       # http://localhost:5173 (proxies /api to the API)
 ```
 
-The worker persists only services calling at stations in someone's commute.
-Until Phase 3 adds sign-up, create a commute by hand:
-
-```sql
-insert into "user"(id, name, email) values ('dev', 'Dev', 'dev@example.com');
-insert into commutes(user_id, name, home_crs, work_crs, outbound_start, outbound_end,
-                     return_start, return_end, active_days, is_default)
-values ('dev', 'Dev', 'NCL', 'YRK', '07:00', '09:30', '17:00', '19:00', 31, true);
-```
+Sign in as `demo@example.com` / `demo-password-123`, or sign up. With
+`EMAIL_TRANSPORT=console`, the verification link appears in the API log.
+The worker persists only services calling at stations in someone's commute,
+so the seeded demo commutes (NCL⇄YRK, DAR⇄LDS, YRK⇄NCL) make it ingest the mock trains.
 
 API so far:
 
@@ -52,6 +49,11 @@ API so far:
 | `GET /api/operators` | |
 | `GET /api/board?from=NCL&to=YRK&date=&start=07:00&end=09:00&operators=TP,GR` | London window; `end` <= `start` wraps midnight; the default is the whole day |
 | `GET /api/services/:id` | calling pattern, and the services it is formed by and forms |
+| `/api/auth/*` | Better Auth: sign-up, verify email, sign-in/out, password reset, `delete-user` (GDPR deletion) |
+| `GET, POST /api/commutes` · `GET, PATCH, DELETE /api/commutes/:id` | signed-in; one default per user |
+| `POST /api/commutes/:id/default` · `GET, PUT /api/commutes/:id/alert-settings` | |
+| `GET /api/commutes/:id/board?direction=outbound\|return&date=` | the commute's windows and operators |
+| `GET /api/me` · `GET /api/me/export` | profile; GDPR JSON export |
 
 ## Running on mock data
 
@@ -74,10 +76,12 @@ MOCK_CLOCK_START=2026-11-10T06:30:00Z MOCK_CLOCK_SPEED=60 pnpm --filter @mct/wor
 ## Layout
 
 ```
-apps/api           Fastify API
+apps/web           Vite + React web app (TanStack Router/Query, shadcn/ui, Tailwind v4)
+apps/api           Fastify API (Better Auth)
 apps/worker        feed adapters (mock + live placeholders), ingest, maintenance jobs
 packages/shared    domain types, zod schemas, time handling, adapter interfaces, demo reference data
-packages/db        Drizzle schema, migrations, seed
+packages/db        Drizzle schema, migrations, seed (drizzle-orm is re-exported as @mct/db/orm)
+packages/email     EmailTransport (console, Resend) and templates
 fixtures/          mock scenarios
 legacy/            previous prototype (to be removed)
 ```

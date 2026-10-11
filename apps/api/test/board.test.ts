@@ -9,7 +9,7 @@ import { IngestPipeline } from '@mct/worker/ingest';
 import { ScenarioLibrary } from '@mct/worker/mock';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../src/app.ts';
+import { testApp } from './helpers.ts';
 
 const url = process.env.TEST_DATABASE_URL;
 const DAY = '2026-11-10';
@@ -41,7 +41,7 @@ describe.skipIf(!url)('board API', () => {
     for (const e of lib.darwinEvents([DAY]).filter((e) => e.at <= cutoff || e.at.startsWith(NEXT) || e.at >= fromLondon(DAY, '17:00').toISOString())) {
       await pipeline.handle({ source: 'darwin', event: e });
     }
-    app = await buildApp({ db: h, now: () => fromLondon(DAY, '08:40') });
+    app = (await testApp(h, { now: () => fromLondon(DAY, '08:40') })).app;
   });
 
   afterAll(async () => {
@@ -130,7 +130,7 @@ describe.skipIf(!url)('board API', () => {
   });
 
   it('rate-limits', async () => {
-    const limited = await buildApp({ db: h, rateLimitPerMin: 2 });
+    const { app: limited } = await testApp(h, { rateLimitPerMin: 2 });
     try {
       const codes = [];
       for (let i = 0; i < 3; i++) codes.push((await limited.inject({ method: 'GET', url: '/api/operators' })).statusCode);

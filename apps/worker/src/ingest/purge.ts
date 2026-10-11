@@ -1,6 +1,6 @@
 import { associations, incidents, networkEvents, services, type Db } from '@mct/db';
 import { addDays, toLondon } from '@mct/shared';
-import { and, lt, notExists, sql } from 'drizzle-orm';
+import { and, lt, notExists, sql } from '@mct/db/orm';
 
 export interface PurgeConfig {
   /** Keep services whose start date is within this many days before today (London). */

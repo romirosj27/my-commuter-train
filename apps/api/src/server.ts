@@ -1,4 +1,5 @@
 import { createDb } from '@mct/db';
+import { createTransport } from '@mct/email';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
 import { loadEnv } from './env.ts';
@@ -11,8 +12,12 @@ const pretty = env.NODE_ENV === 'development' && process.stdout.isTTY;
 const app = await buildApp({
   db,
   redis,
-  webOrigins: env.WEB_ORIGIN.split(',').map((s) => s.trim()),
+  email: createTransport(env),
+  authSecret: env.BETTER_AUTH_SECRET,
+  apiURL: env.API_PUBLIC_URL,
+  webURL: env.WEB_URL,
   rateLimitPerMin: env.RATE_LIMIT_PER_MIN,
+  authRateLimitPerMin: env.AUTH_RATE_LIMIT_PER_MIN,
   logger: {
     level: env.LOG_LEVEL,
     redact: ['req.headers.authorization', 'req.headers.cookie'],

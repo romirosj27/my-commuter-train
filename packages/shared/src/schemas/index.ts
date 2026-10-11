@@ -35,20 +35,6 @@ export const timeWindowSchema = z
   .object({ start: localTimeSchema, end: localTimeSchema })
   .refine((w) => w.start !== w.end, { message: 'Window start and end must differ' });
 
-export const commuteInputSchema = z
-  .object({
-    name: z.string().trim().min(1).max(60),
-    homeCrs: crsSchema,
-    workCrs: crsSchema,
-    outbound: timeWindowSchema,
-    return: timeWindowSchema,
-    activeDays: z.array(isoWeekdaySchema).min(1).max(7),
-    operatorCodes: z.array(tocSchema).max(20).default([]),
-    isDefault: z.boolean().default(false),
-  })
-  .refine((c) => c.homeCrs !== c.workCrs, { message: 'Home and work stations must differ', path: ['workCrs'] });
-export type CommuteInput = z.infer<typeof commuteInputSchema>;
-
 export const alertSettingsSchema = z
   .object({
     enabled: z.boolean(),
@@ -57,6 +43,65 @@ export const alertSettingsSchema = z
     quietHours: timeWindowSchema.nullable(),
   });
 export type AlertSettingsInput = z.infer<typeof alertSettingsSchema>;
+
+export const DEFAULT_ALERT_SETTINGS: AlertSettingsInput = {
+  enabled: true,
+  types: [...alertTypes],
+  delayThresholdMin: 5,
+  quietHours: null,
+};
+
+const commuteFields = {
+  name: z.string().trim().min(1).max(60),
+  homeCrs: crsSchema,
+  workCrs: crsSchema,
+  outbound: timeWindowSchema,
+  return: timeWindowSchema,
+  activeDays: z
+    .array(isoWeekdaySchema)
+    .min(1)
+    .max(7)
+    .transform((d) => [...new Set(d)].sort()),
+  /** Empty = all operators. */
+  operatorCodes: z
+    .array(tocSchema)
+    .max(20)
+    .transform((c) => [...new Set(c)]),
+  isDefault: z.boolean(),
+};
+
+const distinctStations = (c: { homeCrs?: string; workCrs?: string }) => c.homeCrs !== c.workCrs;
+
+export const commuteInputSchema = z
+  .object({
+    ...commuteFields,
+    operatorCodes: commuteFields.operatorCodes.default([]),
+    isDefault: commuteFields.isDefault.default(false),
+    alertSettings: alertSettingsSchema.optional(),
+  })
+  .strict()
+  .refine(distinctStations, { message: 'Home and work stations must differ', path: ['workCrs'] });
+export type CommuteInput = z.infer<typeof commuteInputSchema>;
+
+/** Partial update; the merged result is re-checked with `commuteInputSchema`. */
+export const commutePatchSchema = z.object(commuteFields).partial().strict();
+export type CommutePatch = z.infer<typeof commutePatchSchema>;
+
+export interface CommuteDto {
+  id: string;
+  name: string;
+  homeCrs: string;
+  homeName: string;
+  workCrs: string;
+  workName: string;
+  outbound: { start: string; end: string };
+  return: { start: string; end: string };
+  activeDays: number[];
+  operatorCodes: string[];
+  isDefault: boolean;
+  alertSettings: AlertSettingsInput;
+  createdAt: string;
+}
 
 export const stationSchema = z.object({
   crs: crsSchema,

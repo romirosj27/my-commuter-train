@@ -1,9 +1,14 @@
 import type { Db, DbHandle } from '@mct/db';
+import type { EmailTransport } from '@mct/email';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { Redis } from 'ioredis';
+import { createAuth, type Auth } from './auth.ts';
 import { HttpError } from './lib/http.ts';
+import { authPlugin } from './plugins/auth.ts';
+import { commuteRoutes } from './routes/commutes.ts';
+import { meRoutes } from './routes/me.ts';
 import { boardRoutes } from './routes/board.ts';
 import { healthRoutes } from './routes/health.ts';
 import { referenceRoutes } from './routes/reference.ts';
@@ -16,6 +21,8 @@ export interface AppDeps {
   ref: ReferenceCache;
   /** Current time (overridable so tests and mock mode can pin the clock). */
   now: () => Date;
+  auth: Auth;
+  email: EmailTransport;
 }
 
 export interface AppOptions {
@@ -23,8 +30,16 @@ export interface AppOptions {
   redis?: Redis;
   now?: () => Date;
   logger?: FastifyServerOptions['logger'];
-  webOrigins?: string[];
+  email: EmailTransport;
+  authSecret: string;
+  /** Public URL of this API. */
+  apiURL: string;
+  /** Public URL of the web app (CORS origin and email link target). */
+  webURL: string;
   rateLimitPerMin?: number;
+  authRateLimitPerMin?: number;
+  /** Better Auth's internal per-endpoint limiter (disable in tests). */
+  authInternalRateLimit?: boolean;
 }
 
 export async function buildApp(opts: AppOptions) {
@@ -41,9 +56,23 @@ export async function buildApp(opts: AppOptions) {
     redis: opts.redis,
     ref: new ReferenceCache(opts.db.db),
     now: opts.now ?? (() => new Date()),
+    email: opts.email,
+    auth: createAuth({
+      db: opts.db.db,
+      email: opts.email,
+      secret: opts.authSecret,
+      baseURL: opts.apiURL,
+      webURL: opts.webURL,
+      trustedOrigins: [],
+      rateLimit: opts.authInternalRateLimit ?? true,
+    }),
   };
 
-  await app.register(cors, { origin: opts.webOrigins ?? true, credentials: true });
+  await app.register(cors, {
+    origin: [opts.webURL],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  });
   await app.register(rateLimit, {
     global: true,
     max: opts.rateLimitPerMin ?? 300,
@@ -62,8 +91,11 @@ export async function buildApp(opts: AppOptions) {
   });
   app.setNotFoundHandler((_req, reply) => reply.code(404).send({ error: 'Not found' }));
 
+  await authPlugin(app, deps.auth, opts.authRateLimitPerMin ?? 30);
   await healthRoutes(app, deps);
   await referenceRoutes(app, deps);
   await boardRoutes(app, deps);
+  await commuteRoutes(app, deps);
+  await meRoutes(app, deps);
   return app;
 }

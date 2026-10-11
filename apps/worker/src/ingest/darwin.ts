@@ -7,7 +7,7 @@
  */
 import { associations, serviceCalls, services, type Db } from '@mct/db';
 import type { CallRef, CallUpdate, DarwinEvent, NormalisedCall } from '@mct/shared';
-import { and, eq, or, sql } from 'drizzle-orm';
+import { and, eq, or, sql } from '@mct/db/orm';
 import type { WatchedStations } from './watched.ts';
 
 type CallRow = typeof serviceCalls.$inferSelect;

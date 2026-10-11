@@ -1,5 +1,5 @@
 import { operators, stations } from '@mct/db';
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, eq, sql } from '@mct/db/orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppDeps } from '../app.ts';

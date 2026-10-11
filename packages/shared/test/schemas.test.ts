@@ -24,3 +24,12 @@ describe('commuteInputSchema', () => {
     expect(commuteInputSchema.safeParse({ ...base, activeDays: [] }).success).toBe(false);
   });
 });
+
+describe('commutePatchSchema', () => {
+  it('accepts partial updates without filling defaults', async () => {
+    const { commutePatchSchema } = await import('../src/schemas/index.ts');
+    expect(commutePatchSchema.parse({ name: 'x' })).toEqual({ name: 'x' });
+    expect(commutePatchSchema.safeParse({ bogus: 1 }).success).toBe(false);
+    expect(commutePatchSchema.parse({ activeDays: [3, 1, 1] })).toEqual({ activeDays: [1, 3] });
+  });
+});

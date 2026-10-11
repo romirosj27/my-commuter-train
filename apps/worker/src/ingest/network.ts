@@ -5,7 +5,7 @@
  */
 import { networkEvents, serviceCalls, services, tiplocs, type Db } from '@mct/db';
 import type { NetworkEvent } from '@mct/shared';
-import { eq, gte } from 'drizzle-orm';
+import { eq, gte } from '@mct/db/orm';
 
 export class NetworkIngestor {
   private routeTiplocs: { at: number; set: Set<string> } | null = null;

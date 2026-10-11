@@ -1,6 +1,6 @@
 import { incidents, type Db } from '@mct/db';
 import type { IncidentsFeed } from '@mct/shared';
-import { and, gt, isNull, notInArray, sql } from 'drizzle-orm';
+import { and, gt, isNull, notInArray, sql } from '@mct/db/orm';
 
 /**
  * Upserts active incidents and closes any open incident the feed no longer lists.
