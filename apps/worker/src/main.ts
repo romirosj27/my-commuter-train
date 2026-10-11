@@ -2,7 +2,8 @@
  * Worker entry point: feed ingest (via a BullMQ queue, in order), scheduled
  * maintenance, and a health endpoint. The alert engine joins in Phase 5.
  */
-import { createDb } from '@mct/db';
+import { createDb, PredictionInputs } from '@mct/db';
+import { predictionConfigFromJson } from '@mct/shared';
 import { createTransport } from '@mct/email';
 import { AlertEngine, type EmailJob } from './alerts/engine.ts';
 import { sendAlertEmail } from './alerts/sender.ts';
@@ -42,9 +43,11 @@ const pipeline = new IngestPipeline(db, now, async (changes) => {
 
 // --- Alerts: evaluate changed services, then send emails (retried). ---
 const transport = createTransport(env);
+const predictions = new PredictionInputs(db, predictionConfigFromJson(env.PREDICTION_CONFIG));
 const engine = new AlertEngine({
   db,
   now,
+  riskFor: (serviceId, leg) => predictions.assess({ serviceId, fromCrs: leg.from.crs, toCrs: leg.to.crs }, now()),
   webURL: env.WEB_URL,
   apiURL: env.API_PUBLIC_URL,
   enqueueEmail: async (job) => void (await queues.email.add('alert', job)),

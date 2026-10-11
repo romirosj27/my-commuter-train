@@ -1,4 +1,4 @@
-import { associations, serviceCalls, services, type Db } from '@mct/db';
+import { associations, serviceCalls, services, type Db, type PredictionInputs } from '@mct/db';
 import {
   addDays,
   callView,
@@ -34,7 +34,12 @@ type ServiceRow = typeof services.$inferSelect;
 const stored = (c: CallRow): StoredCall => ({ ...c, crs: c.crs?.trim() ?? null });
 
 /** Services departing `fromCrs` within the window that later call at `toCrs`, ordered by departure. */
-export async function getBoard(db: Db, ref: ReferenceCache, q: BoardQuery): Promise<BoardService[]> {
+export async function getBoard(
+  db: Db,
+  ref: ReferenceCache,
+  q: BoardQuery,
+  predict?: { inputs: PredictionInputs; now: Date },
+): Promise<BoardService[]> {
   await ref.ensure();
   const { from, to } = windowInstants(q.date, q.start, q.end);
   const dep = aliasedTable(serviceCalls, 'dep');
@@ -60,9 +65,20 @@ export async function getBoard(db: Db, ref: ReferenceCache, q: BoardQuery): Prom
     )
     .orderBy(asc(dep.serviceId), asc(dep.seq), asc(arr.seq));
 
-  return rows
+  const board = rows
     .map(({ service, dep: d, arr: a }) => toBoardService(ref, service, d, a))
     .sort((x, y) => (x.from.departure.scheduled ?? '').localeCompare(y.from.departure.scheduled ?? ''));
+  if (predict) {
+    await Promise.all(
+      board.map(async (s) => {
+        // Only worth predicting for trains that haven't finished the journey and aren't already cancelled.
+        if (s.status === 'cancelled' || s.progress === 'arrived') return;
+        const risk = await predict.inputs.assess({ serviceId: s.serviceId, fromCrs: q.fromCrs, toCrs: q.toCrs }, predict.now);
+        if (risk) s.risk = risk;
+      }),
+    );
+  }
+  return board;
 }
 
 function toBoardService(ref: ReferenceCache, s: ServiceRow, d: CallRow, a: CallRow): BoardService {
@@ -111,7 +127,12 @@ async function linked(db: Db, ref: ReferenceCache, feedId: string, tiploc: strin
   };
 }
 
-export async function getServiceDetail(db: Db, ref: ReferenceCache, id: string): Promise<ServiceDetail | null> {
+export async function getServiceDetail(
+  db: Db,
+  ref: ReferenceCache,
+  id: string,
+  predict?: { inputs: PredictionInputs; now: Date; fromCrs?: string; toCrs?: string },
+): Promise<ServiceDetail | null> {
   await ref.ensure();
   const [s] = await db.select().from(services).where(eq(services.id, id));
   if (!s) return null;
@@ -125,7 +146,9 @@ export async function getServiceDetail(db: Db, ref: ReferenceCache, id: string):
     .from(associations)
     .where(and(eq(associations.mainFeedId, s.feedId), eq(associations.kind, 'forms')));
 
+  const risk = predict && !s.isCancelled ? await predict.inputs.assess({ serviceId: s.id, fromCrs: predict.fromCrs, toCrs: predict.toCrs }, predict.now) : null;
   return {
+    ...(risk ? { risk } : {}),
     serviceId: s.id,
     headcode: s.headcode,
     toc: s.toc.trim(),

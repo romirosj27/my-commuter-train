@@ -71,7 +71,7 @@ export async function commuteRoutes(app: FastifyInstance, deps: AppDeps) {
       start: window.start,
       end: window.end,
       operators: c.operatorCodes,
-    });
+    }, { inputs: deps.predictions, now: deps.now() });
     const weekday = toLondon(new Date(`${date}T12:00:00Z`)).weekday;
     return {
       commuteId: c.id,

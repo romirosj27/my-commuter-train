@@ -14,7 +14,8 @@ env vars) arrives in Phase 8.
 - Phase 3 (done): accounts (Better Auth, email verification, password reset, GDPR export and deletion) and commute setup, in the API and web app.
 - Phase 4 (done): live board UI (home page) and service detail.
 - Phase 5 (done): alert engine and email.
-- Next: prediction rules wired into the board and alerts (Phase 6).
+- Phase 6 (done): prediction rules wired into the board, service detail and alerts.
+- Next: Delay Repay helper (Phase 7).
 
 ## Alerts
 
@@ -38,6 +39,25 @@ service departing soon) against users' commutes:
   shows a confirmation page; `POST` turns that commute's alerts off.
 
 With `EMAIL_TRANSPORT=console`, alert emails are printed in the worker log.
+
+## Disruption prediction
+
+Three rule-based predictions (pure functions in `packages/shared/src/prediction`),
+each giving `{ risk: low | medium | high, reason }`. They're combined by taking the highest
+risk and keeping every reason. `PredictionInputs` (`@mct/db`) gathers their inputs, so the
+board, the service page and alerts all see the same result.
+
+| rule | medium | high |
+|---|---|---|
+| Forming service | the inbound unit arrives too late to leave on time after the minimum turnaround (any knock-on) | knock-on ≥ 10 min, or the inbound train is cancelled |
+| Upstream | a train ahead on the same route (same two stations) is ≥ 10 min late within 60 min; or recent network events on the route show ≥ 10 min delays or a cancellation | a train ahead is cancelled within 30 min |
+| Published incident | an active incident affects a station on the route | it affects your boarding or alighting station |
+
+Thresholds are configurable with `PREDICTION_CONFIG` (JSON, any subset), e.g.
+
+```bash
+PREDICTION_CONFIG='{"minTurnaroundMin":6,"turnaroundOverrides":{"NCL":8,"NCL:TP":10},"upstream":{"delayWindowMin":45}}'
+```
 
 ## Local setup
 

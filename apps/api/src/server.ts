@@ -1,5 +1,6 @@
 import { createDb } from '@mct/db';
 import { createTransport } from '@mct/email';
+import { predictionConfigFromJson } from '@mct/shared';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
 import { loadEnv } from './env.ts';
@@ -18,6 +19,7 @@ const app = await buildApp({
   webURL: env.WEB_URL,
   rateLimitPerMin: env.RATE_LIMIT_PER_MIN,
   authRateLimitPerMin: env.AUTH_RATE_LIMIT_PER_MIN,
+  predictionConfig: predictionConfigFromJson(env.PREDICTION_CONFIG),
   logger: {
     level: env.LOG_LEVEL,
     redact: ['req.headers.authorization', 'req.headers.cookie'],

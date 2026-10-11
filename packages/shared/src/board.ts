@@ -120,7 +120,7 @@ export interface BoardService {
   delayMin: number | null;
   /** Cancellation reason if cancelled, else the most specific delay reason. */
   reason: string | null;
-  /** Disruption prediction; absent until assessed (Phase 6). */
+  /** Disruption prediction for this journey. */
   risk?: RiskSummary;
 }
 
@@ -128,8 +128,15 @@ export type RiskLevel = 'low' | 'medium' | 'high';
 
 export interface RiskSummary {
   risk: RiskLevel;
-  /** Human-readable reasons, most significant first. */
+  /** Human-readable reasons from every rule, most severe first. */
   reasons: string[];
+  /** Each rule's result, most severe first. */
+  factors: Array<{ rule: string; risk: RiskLevel; reason: string }>;
+}
+
+/** The reasons worth showing a passenger: those from rules at medium or high risk. */
+export function riskReasons(r: RiskSummary): string[] {
+  return r.factors.filter((f) => f.risk !== 'low').map((f) => f.reason);
 }
 
 export interface ServiceDetail {

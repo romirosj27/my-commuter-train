@@ -90,6 +90,17 @@ describe.skipIf(!url)('board API', () => {
     expect(body.services[5]!.reason).toMatch(/fault on this train/);
   });
 
+  it('attaches a disruption risk to trains still running', async () => {
+    const { body } = await get<Board>(`/api/board?from=NCL&to=YRK&date=${DAY}&start=07:00&end=08:45`);
+    const byTime: Record<string, BoardService> = Object.fromEntries(body.services.map((s) => [hm(s.from.departure.scheduled), s]));
+    expect(byTime['07:05']!.risk).toBeUndefined(); // arrived
+    expect(byTime['08:02']!.risk).toBeUndefined(); // cancelled
+    expect(byTime['08:30']!.risk!.factors.map((f) => f.rule).sort()).toEqual(['forming', 'incident', 'upstream']);
+    // The 08:02, 28 min ahead (inside the 30-min window), is cancelled.
+    expect(byTime['08:30']!.risk).toMatchObject({ risk: 'high' });
+    expect(byTime['08:30']!.risk!.reasons[0]).toBe('The 08:02 to York just ahead of yours is cancelled.');
+  });
+
   it('filters by operator', async () => {
     const { body } = await get<Board>(`/api/board?from=NCL&to=YRK&date=${DAY}&start=07:00&end=09:00&operators=GR`);
     expect(body.services.every((s) => s.toc === 'GR')).toBe(true);

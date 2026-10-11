@@ -17,6 +17,7 @@ const schema = z.object({
   EMAIL_TRANSPORT: z.enum(['console', 'resend']).default('console'),
   EMAIL_FROM: z.string().default('My Commuter Train <alerts@localhost>'),
   RESEND_API_KEY: z.string().optional(),
+  PREDICTION_CONFIG: z.string().optional(),
 });
 
 export type WorkerEnv = z.infer<typeof schema>;

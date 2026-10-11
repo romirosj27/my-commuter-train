@@ -9,7 +9,8 @@
     "./schemas": "./src/schemas/index.ts",
     "./reference": "./src/reference/index.ts",
     "./feeds": "./src/feeds.ts",
-    "./board": "./src/board.ts"
+    "./board": "./src/board.ts",
+    "./prediction": "./src/prediction/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

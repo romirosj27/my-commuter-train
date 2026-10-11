@@ -54,10 +54,11 @@ describe('BoardTable', () => {
 
   it('shows a risk badge only for medium or high risk', async () => {
     const list = await renderBoard([
-      service({ risk: { risk: 'high', reasons: ['The train forming this service is 25 min late.'] } }),
-      service({ risk: { risk: 'low', reasons: [] }, from: call({ departure: tv('2026-11-10T09:00:00Z') }) }),
+      service({ risk: { risk: 'high', reasons: ['The train forming this service is 25 min late.'], factors: [{ rule: 'forming', risk: 'high', reason: 'The train forming this service is 25 min late.' }] } }),
+      service({ risk: { risk: 'low', reasons: [], factors: [] }, from: call({ departure: tv('2026-11-10T09:00:00Z') }) }),
     ]);
     expect(within(list).getAllByText(/risk/)).toHaveLength(1);
     expect(within(list).getByText('High risk')).toBeTruthy();
+    expect(list).toHaveTextContent('The train forming this service is 25 min late.');
   });
 });

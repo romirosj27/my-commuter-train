@@ -1,4 +1,5 @@
-import type { Db, DbHandle } from '@mct/db';
+import { PredictionInputs, type Db, type DbHandle } from '@mct/db';
+import { DEFAULT_PREDICTION_CONFIG, type PredictionConfig } from '@mct/shared';
 import type { EmailTransport } from '@mct/email';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
@@ -24,6 +25,7 @@ export interface AppDeps {
   now: () => Date;
   auth: Auth;
   email: EmailTransport;
+  predictions: PredictionInputs;
 }
 
 export interface AppOptions {
@@ -41,6 +43,7 @@ export interface AppOptions {
   authRateLimitPerMin?: number;
   /** Better Auth's internal per-endpoint limiter (disable in tests). */
   authInternalRateLimit?: boolean;
+  predictionConfig?: PredictionConfig;
 }
 
 export async function buildApp(opts: AppOptions) {
@@ -58,6 +61,7 @@ export async function buildApp(opts: AppOptions) {
     ref: new ReferenceCache(opts.db.db),
     now: opts.now ?? (() => new Date()),
     email: opts.email,
+    predictions: new PredictionInputs(opts.db.db, opts.predictionConfig ?? DEFAULT_PREDICTION_CONFIG),
     auth: createAuth({
       db: opts.db.db,
       email: opts.email,

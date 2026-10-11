@@ -2,7 +2,7 @@
  * Alert engine against Postgres (TEST_DATABASE_URL): replays a morning of
  * mock scenarios, evaluating each changed service as the feed would.
  */
-import { alertLog, alertSettings, commutes, user, type DbHandle } from '@mct/db';
+import { alertLog, alertSettings, commutes, PredictionInputs, user, type DbHandle } from '@mct/db';
 import { eq } from '@mct/db/orm';
 import { freshTestDb } from '@mct/db/testing';
 import { ConsoleTransport } from '@mct/email';
@@ -155,6 +155,31 @@ describe.skipIf(!url)('alert engine', () => {
     await setup({ verified: false });
     await replay('09:30');
     expect(subjects()).toEqual([]);
+  });
+
+  it('warns of predicted disruption before the feed shows a delay', async () => {
+    await setup({ types: ['predicted_disruption'] });
+    const inputs = new PredictionInputs(h.db);
+    const predicting = new AlertEngine({
+      db: h.db,
+      now: () => clock,
+      webURL: 'https://app.example',
+      apiURL: 'https://api.example',
+      enqueueEmail: async (job) => void (await sendAlertEmail(h.db, transport, job)),
+      riskFor: (serviceId, leg) => inputs.assess({ serviceId, fromCrs: leg.from.crs, toCrs: leg.to.crs }, clock),
+    });
+    const saved = engine;
+    engine = predicting;
+    try {
+      await replay('07:00');
+    } finally {
+      engine = saved;
+    }
+    // At 06:50 the inbound working is forecast 20 min late: the 08:10 can't turn round in time.
+    const first = transport.sent.find((m) => m.subject.endsWith('08:10 Newcastle to York'))!;
+    expect(first.subject).toBe('Medium risk of disruption: 08:10 Newcastle to York');
+    expect(first.text).toContain('The train forming this service is due into Newcastle at 08:12, 20 min late.');
+    expect(first.text).not.toContain('No published incidents'); // only the reasons that matter
   });
 
   it('stops after the user turns alerts off', async () => {

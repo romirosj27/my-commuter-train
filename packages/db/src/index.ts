@@ -39,3 +39,4 @@ export function toSearchName(name: string): string {
     .trim();
 }
 export { upsertReferenceData } from './reference.ts';
+export { PredictionInputs, type JourneyRef } from './prediction.ts';

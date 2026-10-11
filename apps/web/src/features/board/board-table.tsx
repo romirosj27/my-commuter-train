@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, useReactTable, type SortingState } from '@tanstack/react-table';
 import { AlertTriangle, ArrowRight, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { riskReasons } from '@mct/shared';
 import { Badge } from '@/components/ui/badge';
 import { expectedText, hm, RISK_BADGE, RISK_LABEL, STATUS_BADGE, STATUS_LABEL, statusLine, type ExpectedText } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -39,12 +40,19 @@ export function PlatformBadge({ platform, changed, label = 'Platform' }: { platf
   );
 }
 
+/** The main reason a train is flagged as at risk, for display under the badges. */
+function RiskNote({ s }: { s: BoardService }) {
+  if (!s.risk || s.risk.risk === 'low' || s.status === 'cancelled') return null;
+  const [first] = riskReasons(s.risk);
+  return first ? <p className="text-xs text-amber-700 dark:text-amber-400">{first}</p> : null;
+}
+
 function StatusBadges({ s }: { s: BoardService }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
       <Badge variant={STATUS_BADGE[s.status]}>{STATUS_LABEL[s.status]}</Badge>
       {s.risk && s.risk.risk !== 'low' && (
-        <Badge variant={RISK_BADGE[s.risk.risk]} title={s.risk.reasons.join(' ')}>
+        <Badge variant={RISK_BADGE[s.risk.risk]} title={riskReasons(s.risk).join(' ')}>
           <AlertTriangle /> {RISK_LABEL[s.risk.risk]}
         </Badge>
       )}
@@ -89,6 +97,9 @@ const columns = [
       <div className="grid gap-1">
         <StatusBadges s={s} />
         {s.reason && <p className="text-muted-foreground max-w-56 text-xs">{s.reason}</p>}
+        <div className="max-w-56">
+          <RiskNote s={s} />
+        </div>
       </div>
     ),
   }),
@@ -133,6 +144,7 @@ export function BoardTable({ services, fromCrs, toCrs }: { services: BoardServic
                 </div>
                 <StatusBadges s={s} />
                 {s.reason && <p className="text-muted-foreground text-xs">{s.reason}</p>}
+                <RiskNote s={s} />
               </div>
               <ChevronRight className="text-muted-foreground size-4 shrink-0" />
             </Link>

@@ -13,7 +13,17 @@ import type { WatchedStations } from './watched.ts';
 type CallRow = typeof serviceCalls.$inferSelect;
 type AssociationEvent = Extract<DarwinEvent, { kind: 'association' }>;
 
-export type ChangeKind = 'schedule' | 'forecast' | 'actual' | 'platform' | 'cancellation' | 'reinstatement' | 'reason' | 'association';
+export type ChangeKind =
+  | 'schedule'
+  | 'forecast'
+  | 'actual'
+  | 'platform'
+  | 'cancellation'
+  | 'reinstatement'
+  | 'reason'
+  | 'association'
+  /** The service that forms this one changed (its knock-on prediction may have moved). */
+  | 'forming';
 
 export interface ServiceChange {
   serviceId: string;

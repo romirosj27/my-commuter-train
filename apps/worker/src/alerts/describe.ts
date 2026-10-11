@@ -1,5 +1,5 @@
 import type { AlertLine } from '@mct/email';
-import { formatLondonHm, type AlertDecision, type Leg, type RiskSummary } from '@mct/shared';
+import { formatLondonHm, riskReasons, type AlertDecision, type Leg, type RiskSummary } from '@mct/shared';
 
 const hm = (iso: string | null) => (iso ? formatLondonHm(new Date(iso)) : null);
 
@@ -38,7 +38,7 @@ export function describeAlert(d: AlertDecision, leg: Leg, ctx: { reason: string 
       if (raw === 'low') return { headline: 'Disruption risk has eased', detail: null };
       return {
         headline: `${raw === 'high' ? 'High' : 'Medium'} risk of disruption`,
-        detail: ctx.risk?.reasons.join(' ') || null,
+        detail: (ctx.risk && riskReasons(ctx.risk).join(' ')) || null,
       };
     default:
       return { headline: kind, detail: null };

@@ -1,4 +1,4 @@
-import type { CallView, LinkedService, ServiceDetail } from '@mct/shared';
+import { riskReasons, type CallView, type LinkedService, type ServiceDetail } from '@mct/shared';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { Link, useRouter } from '@tanstack/react-router';
 import { AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -16,10 +16,15 @@ import { cn } from '@/lib/utils';
 import { BOARD_REFRESH_MS } from './board-page';
 import { PlatformBadge } from './board-table';
 
-export const serviceQuery = (id: string) =>
+export const serviceQuery = (id: string, fromCrs?: string, toCrs?: string) =>
   queryOptions({
-    queryKey: ['service', id],
-    queryFn: () => api<ServiceDetail>(`/api/services/${id}`),
+    queryKey: ['service', id, fromCrs ?? null, toCrs ?? null],
+    queryFn: () => {
+      const q = new URLSearchParams();
+      if (fromCrs) q.set('from', fromCrs);
+      if (toCrs) q.set('to', toCrs);
+      return api<ServiceDetail>(`/api/services/${id}${q.size ? `?${q}` : ''}`);
+    },
     refetchInterval: BOARD_REFRESH_MS,
     refetchIntervalInBackground: false,
   });
@@ -115,7 +120,7 @@ function LinkedCard({ title, s, verb, crs }: { title: string; s: LinkedService; 
 }
 
 export function ServicePage({ id, fromCrs, toCrs }: { id: string; fromCrs?: string; toCrs?: string }) {
-  const { data, error, isPending, refetch, isFetching } = useQuery(serviceQuery(id));
+  const { data, error, isPending, refetch, isFetching } = useQuery(serviceQuery(id, fromCrs, toCrs));
   const [showPasses, setShowPasses] = useState(false);
   const router = useRouter();
 
@@ -186,7 +191,7 @@ export function ServicePage({ id, fromCrs, toCrs }: { id: string; fromCrs?: stri
             <Badge variant={RISK_BADGE[data.risk.risk]}>{RISK_LABEL[data.risk.risk]}</Badge> of disruption
           </AlertTitle>
           <AlertDescription>
-            {data.risk.reasons.map((r) => (
+            {riskReasons(data.risk).map((r) => (
               <p key={r}>{r}</p>
             ))}
           </AlertDescription>
