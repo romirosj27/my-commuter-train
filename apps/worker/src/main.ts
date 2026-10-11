@@ -15,6 +15,7 @@ import { createFeeds } from './feeds/index.ts';
 import { FeedSupervisor } from './feeds/supervisor.ts';
 import { startHealthServer } from './health.ts';
 import { syncIncidents } from './ingest/incidents.ts';
+import { fillJourneyActuals } from './ingest/journey-actuals.ts';
 import { purge } from './ingest/purge.ts';
 import { refreshReferenceData } from './ingest/reference.ts';
 import { createQueues, QUEUES, redisConnection, type AlertJob, type IngestJob, type MaintenanceJob } from './jobs/queues.ts';
@@ -84,6 +85,8 @@ const maintenanceWorker = new Worker<MaintenanceJob>(
         return refreshReferenceData(db, feeds.reference);
       case 'purge':
         return purge(db, now());
+      case 'journey-actuals':
+        return fillJourneyActuals(db, feeds.hsp, now(), { log: (msg, err) => log.warn({ err }, msg) });
       case 'alerts-sweep': {
         const ids = await servicesDepartingSoon(db, now());
         await queues.alerts.addBulk(ids.map((serviceId) => ({ name: 'evaluate', data: { serviceId } })));
@@ -103,6 +106,10 @@ await queues.maintenance.upsertJobScheduler('incidents', { every: env.INCIDENTS_
 await queues.maintenance.upsertJobScheduler('alerts-sweep', { every: env.ALERT_SWEEP_SEC * 1000 }, {
   name: 'alerts-sweep',
   data: { task: 'alerts-sweep' },
+});
+await queues.maintenance.upsertJobScheduler('journey-actuals', { pattern: '7 * * * *', tz: 'Europe/London' }, {
+  name: 'journey-actuals',
+  data: { task: 'journey-actuals' },
 });
 await queues.maintenance.upsertJobScheduler('reference', { pattern: '15 3 * * *', tz: 'Europe/London' }, {
   name: 'reference',

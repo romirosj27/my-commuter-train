@@ -19,6 +19,8 @@ const schema = z.object({
   RESEND_API_KEY: z.string().optional(),
   /** JSON overrides for prediction thresholds (see packages/shared/src/prediction). */
   PREDICTION_CONFIG: z.string().optional(),
+  /** Comma-separated emails of users who may edit Delay Repay schemes. */
+  ADMIN_EMAILS: z.string().default(''),
 });
 
 export type ApiEnv = z.infer<typeof schema>;

@@ -4,12 +4,12 @@ import type { FastifyInstance } from 'fastify';
 import type { AppDeps } from '../app.ts';
 import { userOf } from '../plugins/auth.ts';
 
-export async function meRoutes(app: FastifyInstance, { db, now }: AppDeps) {
+export async function meRoutes(app: FastifyInstance, { db, now, adminEmails }: AppDeps & { adminEmails: Set<string> }) {
   const auth = { preHandler: app.requireUser };
 
   app.get('/api/me', auth, async (req) => {
     const u = userOf(req);
-    return { id: u.id, email: u.email, name: u.name };
+    return { id: u.id, email: u.email, name: u.name, isAdmin: adminEmails.has(u.email.toLowerCase()) };
   });
 
   /**

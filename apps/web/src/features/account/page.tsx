@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,6 +10,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { API_BASE } from '@/lib/api';
 import { authClient, authErrorMessage, sessionQuery } from '@/lib/auth';
+import { meQuery } from '@/lib/queries';
 
 async function downloadExport() {
   const res = await fetch(`${API_BASE}/api/me/export`, { credentials: 'include' });
@@ -24,6 +25,7 @@ async function downloadExport() {
 
 export function AccountPage() {
   const { data: session } = useQuery(sessionQuery);
+  const { data: me } = useQuery(meQuery);
   const [exportError, setExportError] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -52,6 +54,13 @@ export function AccountPage() {
           <CardTitle>{session?.user.name}</CardTitle>
           <CardDescription>{session?.user.email}</CardDescription>
         </CardHeader>
+        {me?.isAdmin && (
+          <CardContent>
+            <Link to="/admin/delay-repay" className="text-primary text-sm underline-offset-4 hover:underline">
+              Edit Delay Repay rules (admin)
+            </Link>
+          </CardContent>
+        )}
       </Card>
       <Card>
         <CardHeader>

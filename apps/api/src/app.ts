@@ -9,6 +9,7 @@ import { createAuth, type Auth } from './auth.ts';
 import { HttpError } from './lib/http.ts';
 import { authPlugin } from './plugins/auth.ts';
 import { commuteRoutes } from './routes/commutes.ts';
+import { journeyRoutes } from './routes/journeys.ts';
 import { meRoutes } from './routes/me.ts';
 import { unsubscribeRoutes } from './routes/unsubscribe.ts';
 import { boardRoutes } from './routes/board.ts';
@@ -44,6 +45,8 @@ export interface AppOptions {
   /** Better Auth's internal per-endpoint limiter (disable in tests). */
   authInternalRateLimit?: boolean;
   predictionConfig?: PredictionConfig;
+  /** Users allowed to edit Delay Repay schemes. */
+  adminEmails?: string[];
 }
 
 export async function buildApp(opts: AppOptions) {
@@ -103,7 +106,9 @@ export async function buildApp(opts: AppOptions) {
   await referenceRoutes(app, deps);
   await boardRoutes(app, deps);
   await commuteRoutes(app, deps);
-  await meRoutes(app, deps);
+  const adminEmails = new Set((opts.adminEmails ?? []).map((e) => e.trim().toLowerCase()).filter(Boolean));
+  await meRoutes(app, { ...deps, adminEmails });
+  await journeyRoutes(app, { ...deps, adminEmails });
   await unsubscribeRoutes(app, { ...deps, webURL: opts.webURL });
   return app;
 }

@@ -5,3 +5,4 @@ export { syncIncidents } from './incidents.ts';
 export { refreshReferenceData } from './reference.ts';
 export { purge } from './purge.ts';
 export { IngestPipeline } from '../pipeline.ts';
+export { fillJourneyActuals } from './journey-actuals.ts';

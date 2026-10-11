@@ -4,11 +4,14 @@ import { LogOut, TrainFront } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AccountPage } from '@/features/account/page';
+import { SchemesAdminPage } from '@/features/admin/schemes-page';
 import { BoardPage } from '@/features/board/board-page';
 import { ServicePage } from '@/features/board/service-page';
 import { CheckEmailPage, ForgotPasswordPage, ResetPasswordPage, SignInPage, SignUpPage } from '@/features/auth/pages';
 import { CommutesPage, EditCommutePage, NewCommutePage } from '@/features/commutes/pages';
+import { JourneysPage } from '@/features/journeys/journeys-page';
 import { authClient, sessionQuery } from '@/lib/auth';
+import { meQuery } from '@/lib/queries';
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -16,6 +19,7 @@ interface RouterContext {
 
 function Header() {
   const { data: session } = useQuery(sessionQuery);
+  const { data: me } = useQuery({ ...meQuery, enabled: !!session });
   const qc = useQueryClient();
   const navigate = useNavigate();
   return (
@@ -26,10 +30,15 @@ function Header() {
           <span className={session ? 'sr-only sm:not-sr-only' : ''}>My Commuter Train</span>
         </Link>
         {session && (
-          <nav className="ml-auto flex items-center gap-0.5 text-sm sm:gap-1">
+          <nav className="ml-auto flex items-center gap-0 text-sm sm:gap-1 [&_a]:px-2 sm:[&_a]:px-3">
             <Button variant="ghost" size="sm" asChild>
               <Link to="/" activeOptions={{ exact: true, includeSearch: false }} activeProps={{ className: 'bg-accent' }}>
                 Board
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/journeys" activeProps={{ className: 'bg-accent' }}>
+                Journeys
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
@@ -37,6 +46,13 @@ function Header() {
                 Commutes
               </Link>
             </Button>
+            {me?.isAdmin && (
+              <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+                <Link to="/admin/delay-repay" activeProps={{ className: 'bg-accent' }}>
+                  Rules
+                </Link>
+              </Button>
+            )}
             <Button variant="ghost" size="sm" asChild>
               <Link to="/account" activeProps={{ className: 'bg-accent' }}>
                 Account
@@ -174,10 +190,12 @@ const editCommuteRoute = createRoute({
   },
 });
 const accountRoute = createRoute({ getParentRoute: () => appRoute, path: '/account', component: AccountPage });
+const journeysRoute = createRoute({ getParentRoute: () => appRoute, path: '/journeys', component: JourneysPage });
+const adminSchemesRoute = createRoute({ getParentRoute: () => appRoute, path: '/admin/delay-repay', component: SchemesAdminPage });
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([signInRoute, signUpRoute, checkEmailRoute, forgotRoute, resetRoute]),
-  appRoute.addChildren([indexRoute, serviceRoute, commutesRoute, newCommuteRoute, editCommuteRoute, accountRoute]),
+  appRoute.addChildren([indexRoute, serviceRoute, commutesRoute, newCommuteRoute, editCommuteRoute, accountRoute, journeysRoute, adminSchemesRoute]),
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {

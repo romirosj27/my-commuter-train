@@ -15,7 +15,31 @@ env vars) arrives in Phase 8.
 - Phase 4 (done): live board UI (home page) and service detail.
 - Phase 5 (done): alert engine and email.
 - Phase 6 (done): prediction rules wired into the board, service detail and alerts.
-- Next: Delay Repay helper (Phase 7).
+- Phase 7 (done): Delay Repay helper.
+- Next: Dockerfiles, deploy config, full README and final test pass (Phase 8).
+
+## Delay Repay helper
+
+Only journeys a user says they made are ever assessed; nothing lists other trains to claim for.
+
+- **Suggestions:** for today or yesterday, one train per direction of the default commute. It's
+  your usual train (the departure time and operator you log most), or the first train in your
+  window if you have no history yet. You confirm it (times come from the live data) or enter a
+  different train by hand. London times; an arrival after midnight is handled.
+- **Delay:** worked out from actual arrival times as real elapsed minutes, across midnight
+  and the clock changes. A worker job (hourly) fills in missing arrival times for logged journeys,
+  from live data while it's held and from HSP after that.
+- **Eligibility:** uses the operator's bands in `delay_repay_schemes` (from inclusive, up to
+  exclusive; % of a single or return; season tickets get the band only). Each result reminds the
+  user to check the operator's current terms, and unverified schemes are flagged.
+- **Rules:** seeded as **placeholders** (`verified_on` null). Admins listed in `ADMIN_EMAILS`
+  edit them at `/admin/delay-repay` (`PUT /api/delay-repay/schemes/:toc`).
+
+| route | notes |
+|---|---|
+| `GET /api/journeys` · `POST /api/journeys` · `GET, PATCH, DELETE /api/journeys/:id` | own journeys with eligibility; POST takes `{ serviceId, originCrs, destCrs }` or a manual entry |
+| `GET /api/journeys/suggestions?date=` | usual-train suggestions (not saved until confirmed) |
+| `GET /api/delay-repay/schemes` · `PUT /api/delay-repay/schemes/:toc` | read for all; edit for admins |
 
 ## Alerts
 

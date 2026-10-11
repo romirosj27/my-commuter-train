@@ -14,7 +14,7 @@ export const QUEUES = {
 } as const;
 
 export type IngestJob = { source: 'darwin'; event: DarwinEvent } | { source: 'network'; event: NetworkEvent };
-export type MaintenanceJob = { task: 'incidents' | 'reference' | 'purge' | 'alerts-sweep' };
+export type MaintenanceJob = { task: 'incidents' | 'reference' | 'purge' | 'alerts-sweep' | 'journey-actuals' };
 export interface AlertJob {
   serviceId: string;
 }
