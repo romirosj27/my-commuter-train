@@ -9,8 +9,9 @@ env vars) arrives in Phase 8.
 
 ## Status
 
-Phase 1 is done: monorepo scaffold, docker-compose, database schema, reference
-data and mock feed adapters. `apps/api` and `apps/web` come in Phases 2–4.
+- Phase 1 (done): monorepo scaffold, docker-compose, database schema, reference data and mock feed adapters.
+- Phase 2 (done): worker ingest from the mock feeds, and the live board API.
+- Next: auth and commute setup (Phase 3); `apps/web` arrives in Phases 3–4.
 
 ## Local setup
 
@@ -24,6 +25,33 @@ pnpm db:migrate                 # creates pg_trgm and applies migrations
 pnpm db:seed                    # reference data + placeholder Delay Repay schemes
 pnpm typecheck && pnpm test
 ```
+
+## Running the worker and API
+
+```bash
+pnpm dev:worker    # ingest + maintenance jobs; health on :8081/health
+pnpm dev:api       # http://localhost:8080
+```
+
+The worker persists only services calling at stations in someone's commute.
+Until Phase 3 adds sign-up, create a commute by hand:
+
+```sql
+insert into "user"(id, name, email) values ('dev', 'Dev', 'dev@example.com');
+insert into commutes(user_id, name, home_crs, work_crs, outbound_start, outbound_end,
+                     return_start, return_end, active_days, is_default)
+values ('dev', 'Dev', 'NCL', 'YRK', '07:00', '09:30', '17:00', '19:00', 31, true);
+```
+
+API so far:
+
+| route | notes |
+|---|---|
+| `GET /health` | database and Redis checks |
+| `GET /api/stations?q=` | autocomplete on name or CRS |
+| `GET /api/operators` | |
+| `GET /api/board?from=NCL&to=YRK&date=&start=07:00&end=09:00&operators=TP,GR` | London window; `end` <= `start` wraps midnight; the default is the whole day |
+| `GET /api/services/:id` | calling pattern, and the services it is formed by and forms |
 
 ## Running on mock data
 
@@ -46,7 +74,8 @@ MOCK_CLOCK_START=2026-11-10T06:30:00Z MOCK_CLOCK_SPEED=60 pnpm --filter @mct/wor
 ## Layout
 
 ```
-apps/worker        feed adapters (mock + live placeholders); ingest and alerts from Phase 2
+apps/api           Fastify API
+apps/worker        feed adapters (mock + live placeholders), ingest, maintenance jobs
 packages/shared    domain types, zod schemas, time handling, adapter interfaces, demo reference data
 packages/db        Drizzle schema, migrations, seed
 fixtures/          mock scenarios

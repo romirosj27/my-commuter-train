@@ -38,3 +38,4 @@ export function toSearchName(name: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+export { upsertReferenceData } from './reference.ts';

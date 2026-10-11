@@ -278,22 +278,23 @@ export const serviceCalls = pgTable(
 
 export const associationKindEnum = pgEnum('association_kind', ['forms', 'join', 'divide']);
 
+/**
+ * Associations are keyed by feed id rather than service row, because a feed
+ * may announce an association before (or without) both schedules, and the
+ * worker only persists services relevant to a commute.
+ */
 export const associations = pgTable(
   'associations',
   {
-    mainServiceId: uuid('main_service_id')
-      .notNull()
-      .references(() => services.id, { onDelete: 'cascade' }),
-    assocServiceId: uuid('assoc_service_id')
-      .notNull()
-      .references(() => services.id, { onDelete: 'cascade' }),
+    mainFeedId: text('main_feed_id').notNull(),
+    assocFeedId: text('assoc_feed_id').notNull(),
     kind: associationKindEnum('kind').notNull(),
     tiploc: varchar('tiploc', { length: 7 }).notNull(),
     updatedAt: updatedAt(),
   },
   (t) => [
-    primaryKey({ columns: [t.mainServiceId, t.assocServiceId, t.kind] }),
-    index('associations_assoc_idx').on(t.assocServiceId),
+    primaryKey({ columns: [t.mainFeedId, t.assocFeedId, t.kind] }),
+    index('associations_assoc_idx').on(t.assocFeedId),
   ],
 );
 

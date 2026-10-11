@@ -8,7 +8,8 @@
     "./time": "./src/time/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./reference": "./src/reference/index.ts",
-    "./feeds": "./src/feeds.ts"
+    "./feeds": "./src/feeds.ts",
+    "./board": "./src/board.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

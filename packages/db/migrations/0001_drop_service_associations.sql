@@ -1,0 +1,1 @@
+DROP TABLE "associations" CASCADE;

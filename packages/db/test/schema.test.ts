@@ -4,10 +4,9 @@
  */
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createDb, type DbHandle } from '../src/index.ts';
-import { runMigrations } from '../src/migrate.ts';
+import type { DbHandle } from '../src/index.ts';
 import { alertSettings, commutes, journeys, user, watchedCrs } from '../src/schema.ts';
-import { seed } from '../src/seed.ts';
+import { freshTestDb } from '../src/testing.ts';
 
 const url = process.env.TEST_DATABASE_URL;
 let h: DbHandle;
@@ -27,12 +26,7 @@ const commute = (userId: string, over: Partial<typeof commutes.$inferInsert> = {
 
 describe.skipIf(!url)('database schema', () => {
   beforeAll(async () => {
-    h = createDb(url, { max: 2 });
-    await h.sql`drop schema if exists public cascade`;
-    await h.sql`drop schema if exists drizzle cascade`;
-    await h.sql`create schema public`;
-    await runMigrations(url);
-    await seed(h.db);
+    h = await freshTestDb(url!);
     await h.db.insert(user).values([
       { id: 'u1', name: 'A', email: 'a@example.com' },
       { id: 'u2', name: 'B', email: 'b@example.com' },
