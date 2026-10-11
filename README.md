@@ -277,6 +277,12 @@ Don't run the demo-user seed in production.
 output directory `apps/web/dist`, and `VITE_API_URL=https://api.example.com`. `public/_redirects`
 handles client-side routes and `public/_headers` sets security and cache headers.
 
+**Web on Vercel (alternative):** `vercel.json` builds only the web app (framework Vite, output
+`apps/web/dist`, SPA fallback). Leave the project's Root Directory as the repository root. Vercel
+can't host the worker (it's always on), so the API and worker still run elsewhere (Fly.io or
+Railway). Set `VITE_API_URL` in the Vercel project's environment variables, and set `WEB_URL` on
+the API to the Vercel URL.
+
 **Domains and cookies:** serve the web app and API from sibling subdomains of one domain (for
 example `app.example.com` and `api.example.com`) and set `COOKIE_DOMAIN=example.com`,
 `WEB_URL=https://app.example.com` and `API_PUBLIC_URL=https://api.example.com`. Session cookies are
