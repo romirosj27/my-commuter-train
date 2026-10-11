@@ -4,6 +4,8 @@ import { LogOut, TrainFront } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AccountPage } from '@/features/account/page';
+import { BoardPage } from '@/features/board/board-page';
+import { ServicePage } from '@/features/board/service-page';
 import { CheckEmailPage, ForgotPasswordPage, ResetPasswordPage, SignInPage, SignUpPage } from '@/features/auth/pages';
 import { CommutesPage, EditCommutePage, NewCommutePage } from '@/features/commutes/pages';
 import { authClient, sessionQuery } from '@/lib/auth';
@@ -18,14 +20,18 @@ function Header() {
   const navigate = useNavigate();
   return (
     <header className="bg-card border-b">
-      <div className="mx-auto flex h-14 max-w-3xl items-center gap-4 px-4">
+      <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <Link to="/" className="flex shrink-0 items-center gap-2 font-semibold whitespace-nowrap">
           <TrainFront className="text-primary size-5" />
-          <span className="hidden sm:inline">My Commuter Train</span>
-          <span className="sm:hidden">Commuter</span>
+          <span className={session ? 'sr-only sm:not-sr-only' : ''}>My Commuter Train</span>
         </Link>
         {session && (
-          <nav className="ml-auto flex items-center gap-1 text-sm">
+          <nav className="ml-auto flex items-center gap-0.5 text-sm sm:gap-1">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/" activeOptions={{ exact: true, includeSearch: false }} activeProps={{ className: 'bg-accent' }}>
+                Board
+              </Link>
+            </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/commutes" activeProps={{ className: 'bg-accent' }}>
                 Commutes
@@ -62,6 +68,15 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
       <main className="mx-auto max-w-3xl px-4 py-6">
         <Outlet />
       </main>
+    </div>
+  ),
+  errorComponent: ({ error }) => (
+    <div className="mx-auto grid max-w-sm gap-3 py-12 text-center">
+      <p className="font-medium">Something went wrong</p>
+      <p className="text-muted-foreground text-sm">{error instanceof Error ? error.message : 'Please try again.'}</p>
+      <Button variant="outline" className="mx-auto" onClick={() => window.location.reload()}>
+        Try again
+      </Button>
     </div>
   ),
   notFoundComponent: () => (
@@ -127,9 +142,26 @@ const appRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/',
-  // The live board becomes the home page in Phase 4.
-  beforeLoad: () => {
-    throw redirect({ to: '/commutes' });
+  validateSearch: z.object({
+    commute: z.string().uuid().optional().catch(undefined),
+    dir: z.enum(['outbound', 'return']).optional().catch(undefined),
+    day: z.enum(['today', 'tomorrow']).optional().catch(undefined),
+  }),
+  component: function Board() {
+    return <BoardPage search={indexRoute.useSearch()} />;
+  },
+});
+const serviceRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/services/$serviceId',
+  validateSearch: z.object({
+    from: z.string().regex(/^[A-Z]{3}$/).optional().catch(undefined),
+    to: z.string().regex(/^[A-Z]{3}$/).optional().catch(undefined),
+  }),
+  component: function Service() {
+    const { serviceId } = serviceRoute.useParams();
+    const { from, to } = serviceRoute.useSearch();
+    return <ServicePage key={serviceId} id={serviceId} fromCrs={from} toCrs={to} />;
   },
 });
 const commutesRoute = createRoute({ getParentRoute: () => appRoute, path: '/commutes', component: CommutesPage });
@@ -145,7 +177,7 @@ const accountRoute = createRoute({ getParentRoute: () => appRoute, path: '/accou
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([signInRoute, signUpRoute, checkEmailRoute, forgotRoute, resetRoute]),
-  appRoute.addChildren([indexRoute, commutesRoute, newCommuteRoute, editCommuteRoute, accountRoute]),
+  appRoute.addChildren([indexRoute, serviceRoute, commutesRoute, newCommuteRoute, editCommuteRoute, accountRoute]),
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {

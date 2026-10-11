@@ -133,7 +133,7 @@ export function NewCommutePage() {
             throw new Error(errorMessage(e));
           });
           await qc.invalidateQueries({ queryKey: commutesQuery.queryKey });
-          await navigate({ to: '/commutes' });
+          await navigate({ to: '/' });
         }}
       />
     </div>

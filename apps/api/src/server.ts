@@ -25,6 +25,8 @@ const app = await buildApp({
   },
 });
 
+redis?.on('error', (err) => app.log.warn({ err: err.message }, 'redis error'));
+
 await app.listen({ host: env.API_HOST, port: env.API_PORT });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

@@ -11,5 +11,5 @@ export default defineConfig({
     // Same-origin in dev: the API (and Better Auth cookies) are proxied.
     proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:8080', changeOrigin: false } },
   },
-  test: { environment: 'jsdom', globals: false },
+  test: { environment: 'jsdom', globals: false, setupFiles: ['./test/setup.ts'] },
 });

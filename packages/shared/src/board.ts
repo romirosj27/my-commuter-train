@@ -120,6 +120,16 @@ export interface BoardService {
   delayMin: number | null;
   /** Cancellation reason if cancelled, else the most specific delay reason. */
   reason: string | null;
+  /** Disruption prediction; absent until assessed (Phase 6). */
+  risk?: RiskSummary;
+}
+
+export type RiskLevel = 'low' | 'medium' | 'high';
+
+export interface RiskSummary {
+  risk: RiskLevel;
+  /** Human-readable reasons, most significant first. */
+  reasons: string[];
 }
 
 export interface ServiceDetail {
@@ -137,6 +147,7 @@ export interface ServiceDetail {
   formedBy: LinkedService | null;
   /** The service this one goes on to form. */
   forms: LinkedService | null;
+  risk?: RiskSummary;
 }
 
 export interface LinkedService {

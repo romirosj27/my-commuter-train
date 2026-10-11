@@ -12,7 +12,8 @@ env vars) arrives in Phase 8.
 - Phase 1 (done): monorepo scaffold, docker-compose, database schema, reference data and mock feed adapters.
 - Phase 2 (done): worker ingest from the mock feeds, and the live board API.
 - Phase 3 (done): accounts (Better Auth, email verification, password reset, GDPR export and deletion) and commute setup, in the API and web app.
-- Next: live board UI and service detail (Phase 4).
+- Phase 4 (done): live board UI (home page) and service detail.
+- Next: alert engine and email (Phase 5).
 
 ## Local setup
 
@@ -35,7 +36,9 @@ pnpm dev:worker    # ingest + maintenance jobs; health on :8081/health
 pnpm dev:web       # http://localhost:5173 (proxies /api to the API)
 ```
 
-Sign in as `demo@example.com` / `demo-password-123`, or sign up. With
+Sign in as `demo@example.com` / `demo-password-123`, or sign up. To see a busy
+morning board, start the worker with the mock clock at a weekday morning, e.g.
+`MOCK_CLOCK_START=$(date -u +%Y-%m-%d)T07:20:00Z pnpm dev:worker` (London is UTC+1 in summer). With
 `EMAIL_TRANSPORT=console`, the verification link appears in the API log.
 The worker persists only services calling at stations in someone's commute,
 so the seeded demo commutes (NCL⇄YRK, DAR⇄LDS, YRK⇄NCL) make it ingest the mock trains.

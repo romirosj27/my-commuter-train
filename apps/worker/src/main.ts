@@ -22,6 +22,7 @@ const { db, sql, close: closeDb } = createDb(env.DATABASE_URL);
 const connection = redisConnection(env.REDIS_URL);
 const queues = createQueues(connection);
 const redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 1, lazyConnect: true });
+redis.on('error', (err) => log.warn({ err: err.message }, 'redis error'));
 await redis.connect();
 
 const feeds = await createFeeds();

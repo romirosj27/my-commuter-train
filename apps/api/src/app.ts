@@ -77,6 +77,8 @@ export async function buildApp(opts: AppOptions) {
     global: true,
     max: opts.rateLimitPerMin ?? 300,
     timeWindow: '1 minute',
+    // If Redis is unavailable, serve requests rather than fail them.
+    skipOnError: true,
     ...(opts.redis ? { redis: opts.redis, nameSpace: 'mct-rl:' } : {}),
   });
 
