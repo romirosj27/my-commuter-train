@@ -8,9 +8,9 @@ import { call, service, tv } from './fixtures';
 
 afterEach(cleanup);
 
-async function renderBoard(services: BoardService[]) {
+async function renderBoard(services: BoardService[], sortBy: 'departure' | 'delay' = 'departure') {
   const root = createRootRoute();
-  const index = createRoute({ getParentRoute: () => root, path: '/', component: () => <BoardTable services={services} fromCrs="NCL" toCrs="YRK" /> });
+  const index = createRoute({ getParentRoute: () => root, path: '/', component: () => <BoardTable services={services} fromCrs="NCL" toCrs="YRK" sortBy={sortBy} /> });
   const svc = createRoute({ getParentRoute: () => root, path: '/services/$serviceId' });
   const router = createRouter({ routeTree: root.addChildren([index, svc]), history: createMemoryHistory({ initialEntries: ['/'] }) });
   render(<RouterProvider router={router} />);
@@ -60,5 +60,28 @@ describe('BoardTable', () => {
     expect(within(list).getAllByText(/risk/)).toHaveLength(1);
     expect(within(list).getByText('High risk')).toBeTruthy();
     expect(list).toHaveTextContent('The train forming this service is 25 min late.');
+  });
+
+  it('sorts most delayed first: cancelled, then not reaching you, then minutes late, ties by departure', async () => {
+    const dep = (hhmm: string, late = 0) =>
+      call({ departure: tv(`2026-11-10T${hhmm}:00Z`, late ? new Date(Date.parse(`2026-11-10T${hhmm}:00Z`) + late * 60_000).toISOString() : null) });
+    const services = [
+      service({ from: dep('07:05') }),
+      service({ from: dep('07:25', 18), status: 'delayed', delayMin: 18 }),
+      service({ from: dep('07:40', 5), status: 'delayed', delayMin: 5 }),
+      service({ from: dep('08:02'), status: 'cancelled', delayMin: null }),
+      service({ from: dep('08:10', 5), status: 'delayed', delayMin: 5 }),
+      service({ from: dep('08:30', 2), status: 'part_cancelled', delayMin: 2 }),
+      // Late only at the destination still counts.
+      service({ from: dep('08:45'), to: call({ arrival: tv('2026-11-10T09:43:00Z', '2026-11-10T10:10:00Z') }), status: 'delayed', delayMin: 0 }),
+    ];
+    const order = async (by: 'departure' | 'delay') => {
+      const list = await renderBoard(services, by);
+      const times = within(list).getAllByRole('listitem').map((li) => li.textContent!.slice(0, 5));
+      cleanup();
+      return times;
+    };
+    expect(await order('delay')).toEqual(['08:02', '08:30', '08:45', '07:25', '07:40', '08:10', '07:05']);
+    expect(await order('departure')).toEqual(['07:05', '07:25', '07:40', '08:02', '08:10', '08:30', '08:45']);
   });
 });

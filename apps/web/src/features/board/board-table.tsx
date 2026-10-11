@@ -2,7 +2,7 @@ import type { BoardService } from '@mct/shared';
 import { Link } from '@tanstack/react-router';
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, useReactTable, type SortingState } from '@tanstack/react-table';
 import { AlertTriangle, ArrowRight, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { riskReasons } from '@mct/shared';
 import { Badge } from '@/components/ui/badge';
 import { expectedText, hm, RISK_BADGE, RISK_LABEL, STATUS_BADGE, STATUS_LABEL, statusLine, type ExpectedText } from '@/lib/format';
@@ -62,7 +62,30 @@ function StatusBadges({ s }: { s: BoardService }) {
 
 const col = createColumnHelper<BoardService>();
 
+export type BoardSort = 'departure' | 'delay';
+
+/**
+ * How badly a train is affected, for "most delayed first": cancelled, then
+ * not reaching your station, then by minutes late (the worst of departure and
+ * arrival, so it reflects the journey you'd actually make).
+ */
+export function delaySeverity(s: BoardService): number {
+  if (s.status === 'cancelled') return 100_000;
+  const late = Math.max(s.delayMin ?? 0, s.from.departure.delayMin ?? 0, s.to.arrival.delayMin ?? 0, 0);
+  return s.status === 'part_cancelled' ? 50_000 + late : late;
+}
+
 const columns = [
+  // Hidden: drives the "most delayed first" sort (worst first, then by departure).
+  col.accessor((s) => delaySeverity(s), {
+    id: 'delay',
+    header: 'Delay',
+    sortingFn: (a, b) =>
+      b.original && a.original
+        ? delaySeverity(b.original) - delaySeverity(a.original) ||
+          (a.original.from.departure.scheduled ?? '').localeCompare(b.original.from.departure.scheduled ?? '')
+        : 0,
+  }),
   col.accessor((s) => s.from.departure.scheduled ?? '', {
     id: 'departs',
     header: 'Departs',
@@ -109,12 +132,25 @@ const columns = [
  * The board: a table on wider screens, a stacked list on phones. Each service
  * links to its detail page.
  */
-export function BoardTable({ services, fromCrs, toCrs }: { services: BoardService[]; fromCrs: string; toCrs: string }) {
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'departs', desc: false }]);
+const sortingFor = (by: BoardSort): SortingState => [{ id: by === 'delay' ? 'delay' : 'departs', desc: false }];
+
+export function BoardTable({
+  services,
+  fromCrs,
+  toCrs,
+  sortBy = 'departure',
+}: {
+  services: BoardService[];
+  fromCrs: string;
+  toCrs: string;
+  sortBy?: BoardSort;
+}) {
+  const [sorting, setSorting] = useState<SortingState>(sortingFor(sortBy));
+  useEffect(() => setSorting(sortingFor(sortBy)), [sortBy]);
   const table = useReactTable({
     data: services,
     columns,
-    state: { sorting },
+    state: { sorting, columnVisibility: { delay: false } },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),

@@ -180,6 +180,7 @@ const indexRoute = createRoute({
     commute: z.string().uuid().optional().catch(undefined),
     dir: z.enum(['outbound', 'return']).optional().catch(undefined),
     day: z.enum(['today', 'tomorrow']).optional().catch(undefined),
+    sort: z.enum(['departure', 'delay']).optional().catch(undefined),
   }),
   component: function Board() {
     return <BoardPage search={indexRoute.useSearch()} />;

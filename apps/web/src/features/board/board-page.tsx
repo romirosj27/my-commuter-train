@@ -12,7 +12,7 @@ import { appNow } from '@/lib/clock';
 import { hm } from '@/lib/format';
 import { commutesQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import { BoardTable } from './board-table';
+import { BoardTable, type BoardSort } from './board-table';
 
 export type Direction = 'outbound' | 'return';
 export type Day = 'today' | 'tomorrow';
@@ -21,6 +21,7 @@ export interface BoardSearch {
   commute?: string;
   dir?: Direction;
   day?: Day;
+  sort?: BoardSort;
 }
 
 interface BoardResponse {
@@ -190,7 +191,27 @@ export function BoardPage({ search }: { search: BoardSearch }) {
         </Card>
       )}
 
-      {data && data.services.length > 0 && <BoardTable services={data.services} fromCrs={fromCrs} toCrs={toCrs} />}
+      {data && data.services.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 text-sm" role="group" aria-label="Sort trains">
+            <span className="text-muted-foreground">Sort:</span>
+            {(
+              [
+                ['departure', 'Departure time'],
+                ['delay', 'Most delayed first'],
+              ] as const
+            ).map(([value, label]) => {
+              const on = (search.sort ?? 'departure') === value;
+              return (
+                <Button key={value} size="sm" variant={on ? 'secondary' : 'ghost'} aria-pressed={on} className="h-7" onClick={() => setSearch({ sort: value === 'departure' ? undefined : value })}>
+                  {label}
+                </Button>
+              );
+            })}
+          </div>
+          <BoardTable services={data.services} fromCrs={fromCrs} toCrs={toCrs} sortBy={search.sort ?? 'departure'} />
+        </>
+      )}
     </div>
   );
 }
