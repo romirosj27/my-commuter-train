@@ -9,6 +9,7 @@ import { HttpError } from './lib/http.ts';
 import { authPlugin } from './plugins/auth.ts';
 import { commuteRoutes } from './routes/commutes.ts';
 import { meRoutes } from './routes/me.ts';
+import { unsubscribeRoutes } from './routes/unsubscribe.ts';
 import { boardRoutes } from './routes/board.ts';
 import { healthRoutes } from './routes/health.ts';
 import { referenceRoutes } from './routes/reference.ts';
@@ -99,5 +100,6 @@ export async function buildApp(opts: AppOptions) {
   await boardRoutes(app, deps);
   await commuteRoutes(app, deps);
   await meRoutes(app, deps);
+  await unsubscribeRoutes(app, { ...deps, webURL: opts.webURL });
   return app;
 }

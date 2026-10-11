@@ -13,7 +13,31 @@ env vars) arrives in Phase 8.
 - Phase 2 (done): worker ingest from the mock feeds, and the live board API.
 - Phase 3 (done): accounts (Better Auth, email verification, password reset, GDPR export and deletion) and commute setup, in the API and web app.
 - Phase 4 (done): live board UI (home page) and service detail.
-- Next: alert engine and email (Phase 5).
+- Phase 5 (done): alert engine and email.
+- Next: prediction rules wired into the board and alerts (Phase 6).
+
+## Alerts
+
+The worker evaluates every changed service (and, every few minutes, every
+service departing soon) against users' commutes:
+
+- **Matching:** the train must call at the commute's two stations in the right order, run
+  by an allowed operator, and depart inside the outbound or return window. A window that
+  wraps midnight counts towards the day it opened. The user must travel that day, alerts
+  must be on, and it must not be quiet hours (checked in London time when the alert
+  would be sent).
+- **Triggers:** platform change at your station, cancellation (including terminating
+  before your station), delay at or above your threshold, and predicted disruption
+  (Phase 6). Once the train has left, only "won't reach your station" is still sent.
+- **Dedupe:** every alert is logged with a unique key of (user, service, type, value,
+  previous alert), so one change sends one email even if it is evaluated twice. Follow-ups
+  go only when the value changes materially: a delay moving by `materialDelayDeltaMin`
+  (5 min), a new platform, a reinstatement, or a recovery.
+- **Unsubscribe:** every email has a one-click unsubscribe (`List-Unsubscribe` +
+  `List-Unsubscribe-Post`, RFC 8058) and a link to settings. `GET /api/unsubscribe`
+  shows a confirmation page; `POST` turns that commute's alerts off.
+
+With `EMAIL_TRANSPORT=console`, alert emails are printed in the worker log.
 
 ## Local setup
 

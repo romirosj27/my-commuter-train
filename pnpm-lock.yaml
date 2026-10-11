@@ -142,6 +142,9 @@ importers:
       '@mct/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@mct/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@mct/shared':
         specifier: workspace:*
         version: link:../../packages/shared

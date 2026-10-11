@@ -3,6 +3,10 @@
  * maintenance, and a health endpoint. The alert engine joins in Phase 5.
  */
 import { createDb } from '@mct/db';
+import { createTransport } from '@mct/email';
+import { AlertEngine, type EmailJob } from './alerts/engine.ts';
+import { sendAlertEmail } from './alerts/sender.ts';
+import { servicesDepartingSoon } from './alerts/sweep.ts';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { loadEnv } from './env.ts';
@@ -12,7 +16,7 @@ import { startHealthServer } from './health.ts';
 import { syncIncidents } from './ingest/incidents.ts';
 import { purge } from './ingest/purge.ts';
 import { refreshReferenceData } from './ingest/reference.ts';
-import { createQueues, QUEUES, redisConnection, type IngestJob, type MaintenanceJob } from './jobs/queues.ts';
+import { createQueues, QUEUES, redisConnection, type AlertJob, type IngestJob, type MaintenanceJob } from './jobs/queues.ts';
 import { createLogger } from './lib/logger.ts';
 import { IngestPipeline } from './pipeline.ts';
 
@@ -30,9 +34,26 @@ const now = () => feeds.clock.now();
 log.info({ scenarios: feeds.scenarios, clock: now().toISOString() }, 'feeds created');
 
 const pipeline = new IngestPipeline(db, now, async (changes) => {
-  // Phase 5 hands these to the alert engine.
-  for (const c of changes) log.debug({ feedId: c.feedId, kinds: c.kinds }, 'service changed');
+  for (const c of changes) {
+    log.debug({ feedId: c.feedId, kinds: c.kinds }, 'service changed');
+    await queues.alerts.add('evaluate', { serviceId: c.serviceId });
+  }
 });
+
+// --- Alerts: evaluate changed services, then send emails (retried). ---
+const transport = createTransport(env);
+const engine = new AlertEngine({
+  db,
+  now,
+  webURL: env.WEB_URL,
+  apiURL: env.API_PUBLIC_URL,
+  enqueueEmail: async (job) => void (await queues.email.add('alert', job)),
+});
+const alertWorker = new Worker<AlertJob>(QUEUES.alerts, (job) => engine.evaluate(job.data.serviceId), { connection, concurrency: 1 });
+alertWorker.on('failed', (job, err) => log.error({ err, serviceId: job?.data.serviceId }, 'alert evaluation failed'));
+const emailWorker = new Worker<EmailJob>(QUEUES.email, (job) => sendAlertEmail(db, transport, job.data), { connection, concurrency: 4 });
+emailWorker.on('completed', (job, id) => log.info({ messageId: id, alerts: job.data.alertIds.length }, 'alert email sent'));
+emailWorker.on('failed', (job, err) => log.error({ err, attempts: job?.attemptsMade }, 'alert email failed'));
 
 // --- Ingest: feed callbacks enqueue; one worker applies events in order. ---
 feeds.darwin.onEvent(async (event) => {
@@ -60,6 +81,11 @@ const maintenanceWorker = new Worker<MaintenanceJob>(
         return refreshReferenceData(db, feeds.reference);
       case 'purge':
         return purge(db, now());
+      case 'alerts-sweep': {
+        const ids = await servicesDepartingSoon(db, now());
+        await queues.alerts.addBulk(ids.map((serviceId) => ({ name: 'evaluate', data: { serviceId } })));
+        return { services: ids.length };
+      }
     }
   },
   { connection, concurrency: 1 },
@@ -70,6 +96,10 @@ maintenanceWorker.on('failed', (job, err) => log.error({ err, task: job?.data.ta
 await queues.maintenance.upsertJobScheduler('incidents', { every: env.INCIDENTS_POLL_SEC * 1000 }, {
   name: 'incidents',
   data: { task: 'incidents' },
+});
+await queues.maintenance.upsertJobScheduler('alerts-sweep', { every: env.ALERT_SWEEP_SEC * 1000 }, {
+  name: 'alerts-sweep',
+  data: { task: 'alerts-sweep' },
 });
 await queues.maintenance.upsertJobScheduler('reference', { pattern: '15 3 * * *', tz: 'Europe/London' }, {
   name: 'reference',
@@ -107,7 +137,11 @@ const health = startHealthServer(env.WORKER_HEALTH_PORT, {
     database: async () => void (await sql`select 1`),
     redis: async () => void (await redis.ping()),
   },
-  extra: async () => ({ ingestQueue: await queues.ingest.getJobCounts('waiting', 'active', 'failed') }),
+  extra: async () => ({
+    ingestQueue: await queues.ingest.getJobCounts('waiting', 'active', 'failed'),
+    alertQueue: await queues.alerts.getJobCounts('waiting', 'active', 'failed'),
+    emailQueue: await queues.email.getJobCounts('waiting', 'active', 'failed'),
+  }),
 });
 log.info({ port: env.WORKER_HEALTH_PORT }, 'worker started');
 
@@ -119,7 +153,7 @@ async function shutdown(signal: string) {
   ac.abort();
   health.close();
   await running;
-  await Promise.all([ingestWorker.close(), maintenanceWorker.close()]);
+  await Promise.all([ingestWorker.close(), maintenanceWorker.close(), alertWorker.close(), emailWorker.close()]);
   await Promise.all(Object.values(queues).map((q) => q.close()));
   redis.disconnect();
   await closeDb();

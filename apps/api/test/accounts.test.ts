@@ -1,7 +1,7 @@
 /**
  * Main account and commute flows over HTTP, against Postgres (TEST_DATABASE_URL).
  */
-import { commutes, journeys, user, type DbHandle } from '@mct/db';
+import { alertSettings, commutes, journeys, user, type DbHandle } from '@mct/db';
 import { eq } from '@mct/db/orm';
 import { freshTestDb } from '@mct/db/testing';
 import type { ConsoleTransport } from '@mct/email';
@@ -199,6 +199,35 @@ describe.skipIf(!url)('accounts and commutes', () => {
       expect(await h.db.select().from(commutes).where(eq(commutes.id, created.id))).toHaveLength(0);
       expect(await h.db.select().from(journeys).where(eq(journeys.userId, u!.id))).toHaveLength(0);
       expect((await c.get('/api/me')).statusCode).toBe(401);
+    });
+  });
+
+  describe('unsubscribe', () => {
+    it('confirms on GET, unsubscribes on POST (one-click), and rejects bad tokens', async () => {
+      const c = await signedInUser(app, email, 'unsub@example.com');
+      const created: CommuteDto = (await c.post('/api/commutes', commuteBody)).json();
+      const [s] = await h.db.select().from(alertSettings).where(eq(alertSettings.commuteId, created.id));
+      const path = `/api/unsubscribe?token=${encodeURIComponent(s!.unsubscribeToken)}`;
+
+      const page = await app.inject({ method: 'GET', url: path });
+      expect(page.statusCode).toBe(200);
+      expect(page.headers['content-type']).toMatch(/text\/html/);
+      expect(page.body).toContain('<form method="post">');
+      expect((await c.get(`/api/commutes/${created.id}`)).json().alertSettings.enabled).toBe(true); // GET changes nothing
+
+      const post = await app.inject({
+        method: 'POST',
+        url: path,
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        payload: 'List-Unsubscribe=One-Click',
+      });
+      expect(post.statusCode).toBe(200);
+      expect(post.body).toContain('You’re unsubscribed');
+      expect((await c.get(`/api/commutes/${created.id}`)).json().alertSettings.enabled).toBe(false);
+      expect((await app.inject({ method: 'GET', url: path })).body).toContain('Already unsubscribed');
+
+      expect((await app.inject({ method: 'GET', url: '/api/unsubscribe?token=not-a-real-token-123' })).statusCode).toBe(404);
+      expect((await app.inject({ method: 'POST', url: '/api/unsubscribe?token=x' })).statusCode).toBe(404);
     });
   });
 

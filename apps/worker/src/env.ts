@@ -10,6 +10,13 @@ const schema = z.object({
   RESYNC_BEHIND_MIN: z.coerce.number().int().default(120),
   RESYNC_AHEAD_MIN: z.coerce.number().int().default(12 * 60),
   INCIDENTS_POLL_SEC: z.coerce.number().int().min(15).default(120),
+  ALERT_SWEEP_SEC: z.coerce.number().int().min(30).default(300),
+  /** Public URLs used for links in alert emails. */
+  WEB_URL: z.string().url().default('http://localhost:5173'),
+  API_PUBLIC_URL: z.string().url().default('http://localhost:5173'),
+  EMAIL_TRANSPORT: z.enum(['console', 'resend']).default('console'),
+  EMAIL_FROM: z.string().default('My Commuter Train <alerts@localhost>'),
+  RESEND_API_KEY: z.string().optional(),
 });
 
 export type WorkerEnv = z.infer<typeof schema>;

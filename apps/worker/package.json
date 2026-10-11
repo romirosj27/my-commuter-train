@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mct/db": "workspace:*",
+    "@mct/email": "workspace:*",
     "@mct/shared": "workspace:*",
     "bullmq": "^5.81.5",
     "ioredis": "^5.11.1",

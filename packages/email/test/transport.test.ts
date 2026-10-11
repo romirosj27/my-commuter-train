@@ -27,3 +27,23 @@ describe('email transports', () => {
     expect(createTransport({}).name).toBe('console');
   });
 });
+
+describe('alert email', async () => {
+  const { alertEmailMessage } = await import('../src/index.ts');
+  it('is short, escapes content and carries one-click unsubscribe headers', () => {
+    const m = alertEmailMessage({
+      to: 'a@example.com',
+      train: '07:40 Newcastle to York',
+      operator: 'CrossCountry',
+      lines: [{ headline: 'Now platform 4', detail: 'Was platform 2 <b>' }],
+      serviceUrl: 'https://app/s/1',
+      settingsUrl: 'https://app/c/1',
+      unsubscribeUrl: 'https://api/unsub?token=t',
+      unsubscribePostUrl: 'https://api/unsub?token=t',
+    });
+    expect(m.subject).toBe('Now platform 4: 07:40 Newcastle to York');
+    expect(m.html).toContain('Was platform 2 &lt;b&gt;');
+    expect(m.text).toContain('Unsubscribe from alerts for this commute: https://api/unsub?token=t');
+    expect(m.headers).toEqual({ 'List-Unsubscribe': '<https://api/unsub?token=t>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' });
+  });
+});
