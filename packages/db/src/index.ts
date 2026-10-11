@@ -13,8 +13,14 @@ export interface DbHandle {
   close(): Promise<void>;
 }
 
-export function createDb(url: string = requireEnv('DATABASE_URL'), opts: { max?: number } = {}): DbHandle {
-  const client = postgres(url, { max: opts.max ?? 10, onnotice: () => {} });
+/**
+ * Set DATABASE_PREPARE=false when connecting through a transaction-pooling
+ * PgBouncer (e.g. Fly.io Managed Postgres's pooled URL), which can't use
+ * server-side prepared statements.
+ */
+export function createDb(url: string = requireEnv('DATABASE_URL'), opts: { max?: number; prepare?: boolean } = {}): DbHandle {
+  const prepare = opts.prepare ?? process.env.DATABASE_PREPARE !== 'false';
+  const client = postgres(url, { max: opts.max ?? 10, prepare, onnotice: () => {} });
   return {
     db: drizzle(client, { schema, casing: 'snake_case' }),
     sql: client,

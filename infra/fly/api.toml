@@ -1,23 +1,24 @@
-# Fly.io: API. Deploy from the repo root:
-#   fly deploy --config infra/fly/api.toml
-# Set secrets first: DATABASE_URL, REDIS_URL, BETTER_AUTH_SECRET, RESEND_API_KEY, ...
+# Fly.io: API. Deploy from the repository root (see docs/DEPLOY_FLY.md):
+#   fly deploy . --config infra/fly/api.toml --dockerfile Dockerfile --build-arg APP=api
 app = "my-commuter-train-api"
 primary_region = "lhr"
 
 [build]
-  dockerfile = "../../Dockerfile"
   [build.args]
     APP = "api"
 
 [deploy]
-  # Applies database migrations before the new version takes traffic.
-  release_command = "node --import tsx ../../packages/db/src/migrate.ts"
+  # Migrations + reference data before the new version takes traffic.
+  release_command = "sh /app/apps/api/scripts/release.sh"
 
 [env]
   NODE_ENV = "production"
   API_PORT = "8080"
   EMAIL_TRANSPORT = "resend"
-  # API_PUBLIC_URL, WEB_URL, COOKIE_DOMAIN, EMAIL_FROM, ADMIN_EMAILS: set per environment.
+  # Managed Postgres hands out a PgBouncer (transaction pooling) URL.
+  DATABASE_PREPARE = "false"
+  # Set as secrets: DATABASE_URL, REDIS_URL, BETTER_AUTH_SECRET, RESEND_API_KEY,
+  # EMAIL_FROM, WEB_URL, API_PUBLIC_URL, ADMIN_EMAILS, COOKIE_DOMAIN.
 
 [http_service]
   internal_port = 8080

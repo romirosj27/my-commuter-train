@@ -1,13 +1,13 @@
 import { createDb } from '@mct/db';
 import { createTransport } from '@mct/email';
-import { predictionConfigFromJson } from '@mct/shared';
+import { predictionConfigFromJson, redisOptionsFromUrl } from '@mct/shared';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
 import { loadEnv } from './env.ts';
 
 const env = loadEnv();
 const db = createDb(env.DATABASE_URL);
-const redis = env.REDIS_URL ? new Redis(env.REDIS_URL, { maxRetriesPerRequest: 2 }) : undefined;
+const redis = env.REDIS_URL ? new Redis({ ...redisOptionsFromUrl(env.REDIS_URL), maxRetriesPerRequest: 2 }) : undefined;
 const pretty = env.NODE_ENV === 'development' && process.stdout.isTTY;
 
 const app = await buildApp({

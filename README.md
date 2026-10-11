@@ -124,7 +124,8 @@ refuse to start with invalid values.
 | variable | used by | notes |
 |---|---|---|
 | `DATABASE_URL` | api, worker | Postgres 16 |
-| `REDIS_URL` | api, worker | BullMQ queues; API rate limits (fails open if Redis is down) |
+| `DATABASE_PREPARE` | api, worker | `false` behind a transaction-pooling PgBouncer (Fly Managed Postgres) |
+| `REDIS_URL` | api, worker | BullMQ queues; API rate limits (fails open if Redis is down); add `?family=6` on Fly's IPv6 private network |
 | `TEST_DATABASE_URL` | tests | a throwaway database; tests drop and recreate its schema |
 | `NODE_ENV`, `LOG_LEVEL` | api, worker | JSON logs (pino); pretty in dev on a TTY |
 | `API_PORT` | api | default 8080 |
@@ -283,10 +284,9 @@ node --import tsx ../../packages/db/src/seed.ts        # first deploy only: refe
 
 Don't run the demo-user seed in production.
 
-- **Fly.io:** [`infra/fly/api.toml`](infra/fly/api.toml) and [`infra/fly/worker.toml`](infra/fly/worker.toml).
-  `fly secrets set DATABASE_URL=… REDIS_URL=… BETTER_AUTH_SECRET=… RESEND_API_KEY=…` on both
-  apps, set the public URLs, then `fly deploy --config infra/fly/api.toml` (and the worker) from
-  the repo root. Keep exactly **one** worker machine running.
+- **Fly.io (chosen):** follow [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md). It covers creating
+  Managed Postgres, then `infra/fly/setup.sh` (API, worker and a private Redis, with secrets),
+  then `infra/fly/deploy.sh` or the manual **Deploy to Fly.io** GitHub workflow for later deploys.
 - **Railway:** create two services from this repo using the root `Dockerfile`, with the
   `APP=api` / `APP=worker` build argument, the same variables, and a pre-deploy command for the
   API's migrations. Health checks are on `/health` (8080 for the API, 8081 for the worker).

@@ -1,0 +1,12 @@
+# Fly.io: private Redis for the job queues (no public address).
+# Created and deployed by infra/fly/setup.sh.
+app = "my-commuter-train-redis"
+primary_region = "lhr"
+
+[mounts]
+  source = "redis_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

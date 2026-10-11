@@ -6,3 +6,4 @@ export * from './board.ts';
 export * from './alerts.ts';
 export * from './prediction/index.ts';
 export * from './delay-repay.ts';
+export * from './redis-url.ts';

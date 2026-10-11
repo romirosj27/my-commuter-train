@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 # One image recipe for the API and the worker:
 #   docker build --build-arg APP=api    -t mct-api .
 #   docker build --build-arg APP=worker -t mct-worker .
@@ -19,8 +18,7 @@ COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/email/package.json packages/email/package.json
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --prod --filter "@mct/${APP}..."
+RUN pnpm install --frozen-lockfile --prod --filter "@mct/${APP}..."
 COPY packages packages
 COPY apps/${APP} apps/${APP}
 # Mock feed fixtures (the worker can run entirely on mock data).
