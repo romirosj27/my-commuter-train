@@ -1,0 +1,34 @@
+{
+  "name": "upstream-incident",
+  "description": "Mock: a published incident at Darlington, a significantly delayed train ahead on the same route, and network-wide movements and a cancellation near the incident.",
+  "services": [
+    { "ref": "UP1", "uid": "MK6001", "toc": "GR", "headcode": "1M61", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "08:45", "plat": "2" },
+      { "tiploc": "DRHM", "arr": "08:57", "dep": "08:58", "plat": "1" },
+      { "tiploc": "DRLNGTN", "arr": "09:13", "dep": "09:15", "plat": "1" },
+      { "tiploc": "YORK", "arr": "09:43", "plat": "9" } ] },
+    { "ref": "UP2", "uid": "MK6002", "toc": "TP", "headcode": "1M62", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "08:58", "plat": "3" },
+      { "tiploc": "DRHM", "arr": "09:10", "dep": "09:11", "plat": "2" },
+      { "tiploc": "DRLNGTN", "arr": "09:26", "dep": "09:27", "plat": "1" },
+      { "tiploc": "NTHALER", "arr": "09:39", "dep": "09:40", "plat": "2" },
+      { "tiploc": "YORK", "arr": "09:59", "plat": "5" } ] }
+  ],
+  "timeline": [
+    { "type": "update", "at": "08:46", "ref": "UP1", "calls": [ { "tiploc": "NWCSTLE", "atd": "08:46" } ] },
+    { "type": "update", "at": "09:05", "ref": "UP1", "calls": [
+      { "tiploc": "DRHM", "ata": "08:58", "atd": "09:00" },
+      { "tiploc": "DRLNGTN", "eta": "09:40", "etd": "09:42", "delayReason": "Mock reason: a signalling fault at Darlington" },
+      { "tiploc": "YORK", "eta": "10:10" } ] }
+  ],
+  "network": [
+    { "type": "movement", "at": "09:00", "trainRef": "MOCK-FREIGHT-1", "tiploc": "DRLNGTN", "delayMin": 35 },
+    { "type": "movement", "at": "09:00", "trainRef": "MOCK-1M61", "ref": "UP1", "tiploc": "DRHM", "delayMin": 2 },
+    { "type": "cancellation", "at": "09:10", "trainRef": "MOCK-LOCAL-1", "tiploc": "DRLNGTN", "reason": "Mock reason: signalling fault" }
+  ],
+  "incidents": [
+    { "id": "SIG-DAR", "summary": "Mock: signalling problems at Darlington",
+      "description": "Mock incident. Trains through Darlington may be delayed until about 10:30.",
+      "from": { "at": "08:50" }, "to": { "at": "10:30" }, "crs": [ "DAR" ], "tocs": [ "GR", "TP", "XC", "NT" ] }
+  ]
+}

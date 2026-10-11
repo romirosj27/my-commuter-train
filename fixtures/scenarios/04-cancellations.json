@@ -1,0 +1,23 @@
+{
+  "name": "cancellations",
+  "description": "Mock: one full cancellation and one service terminating short (part cancellation).",
+  "services": [
+    { "ref": "CX1", "uid": "MK4001", "toc": "TP", "headcode": "1M41", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "08:02", "plat": "3" },
+      { "tiploc": "DRHM", "arr": "08:14", "dep": "08:15", "plat": "2" },
+      { "tiploc": "DRLNGTN", "arr": "08:30", "dep": "08:31", "plat": "1" },
+      { "tiploc": "NTHALER", "arr": "08:43", "dep": "08:44", "plat": "2" },
+      { "tiploc": "YORK", "arr": "09:03", "plat": "5" } ] },
+    { "ref": "CX2", "uid": "MK4002", "toc": "GR", "headcode": "1M42", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "08:30", "plat": "2" },
+      { "tiploc": "DRHM", "arr": "08:42", "dep": "08:43", "plat": "1" },
+      { "tiploc": "DRLNGTN", "arr": "08:58", "dep": "09:00", "plat": "1" },
+      { "tiploc": "YORK", "arr": "09:28", "plat": "9" } ] }
+  ],
+  "timeline": [
+    { "type": "cancel", "at": "07:15", "ref": "CX1", "reason": "Mock reason: cancelled because of a shortage of train crew" },
+    { "type": "update", "at": "08:30", "ref": "CX2", "calls": [ { "tiploc": "NWCSTLE", "atd": "08:30" } ] },
+    { "type": "cancel", "at": "08:35", "ref": "CX2", "tiplocs": [ "YORK" ], "reason": "Mock reason: a fault on this train" },
+    { "type": "update", "at": "08:58", "ref": "CX2", "calls": [ { "tiploc": "DRLNGTN", "ata": "08:58" } ] }
+  ]
+}

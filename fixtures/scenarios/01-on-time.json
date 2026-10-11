@@ -1,0 +1,29 @@
+{
+  "name": "on-time",
+  "description": "Mock: a morning NCL→YRK and evening YRK→NCL service running to time.",
+  "services": [
+    { "ref": "ON1", "uid": "MK1001", "toc": "TP", "headcode": "1M01", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "07:05", "plat": "3" },
+      { "tiploc": "DRHM", "arr": "07:17", "dep": "07:18", "plat": "2" },
+      { "tiploc": "DRLNGTN", "arr": "07:33", "dep": "07:35", "plat": "1" },
+      { "tiploc": "NTHALER", "arr": "07:47", "dep": "07:48", "plat": "2" },
+      { "tiploc": "YORK", "arr": "08:08", "plat": "5" } ] },
+    { "ref": "ON2", "uid": "MK1002", "toc": "TP", "headcode": "1M02", "calls": [
+      { "tiploc": "YORK", "dep": "17:20", "plat": "3" },
+      { "tiploc": "NTHALER", "arr": "17:38", "dep": "17:39", "plat": "1" },
+      { "tiploc": "DRLNGTN", "arr": "17:51", "dep": "17:53", "plat": "4" },
+      { "tiploc": "DRHM", "arr": "18:08", "dep": "18:09", "plat": "1" },
+      { "tiploc": "NWCSTLE", "arr": "18:22", "plat": "4" } ] }
+  ],
+  "timeline": [
+    { "type": "update", "at": "06:50", "ref": "ON1", "calls": [ { "tiploc": "NWCSTLE", "plat": "3", "platConfirmed": true } ] },
+    { "type": "update", "at": "07:05", "ref": "ON1", "calls": [ { "tiploc": "NWCSTLE", "atd": "07:05" } ] },
+    { "type": "update", "at": "07:18", "ref": "ON1", "calls": [ { "tiploc": "DRHM", "ata": "07:17", "atd": "07:18" } ] },
+    { "type": "update", "at": "07:35", "ref": "ON1", "calls": [ { "tiploc": "DRLNGTN", "ata": "07:33", "atd": "07:35" } ] },
+    { "type": "update", "at": "07:48", "ref": "ON1", "calls": [ { "tiploc": "NTHALER", "ata": "07:47", "atd": "07:48" } ] },
+    { "type": "update", "at": "08:07", "ref": "ON1", "calls": [ { "tiploc": "YORK", "ata": "08:07" } ] },
+    { "type": "update", "at": "17:20", "ref": "ON2", "calls": [ { "tiploc": "YORK", "atd": "17:20" } ] },
+    { "type": "update", "at": "17:53", "ref": "ON2", "calls": [ { "tiploc": "DRLNGTN", "ata": "17:51", "atd": "17:53" } ] },
+    { "type": "update", "at": "18:22", "ref": "ON2", "calls": [ { "tiploc": "NWCSTLE", "ata": "18:21" } ] }
+  ]
+}

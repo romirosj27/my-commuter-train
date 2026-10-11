@@ -1,0 +1,24 @@
+{
+  "name": "platform-change",
+  "description": "Mock: platform changes shortly before departure and at the destination.",
+  "services": [
+    { "ref": "PC1", "uid": "MK3001", "toc": "XC", "headcode": "1V31", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "07:40", "plat": "2" },
+      { "tiploc": "DRHM", "arr": "07:52", "dep": "07:53", "plat": "1" },
+      { "tiploc": "DRLNGTN", "arr": "08:08", "dep": "08:10", "plat": "1" },
+      { "tiploc": "YORK", "arr": "08:37", "plat": "5" } ] },
+    { "ref": "PC2", "uid": "MK3002", "toc": "XC", "headcode": "1S32", "calls": [
+      { "tiploc": "YORK", "dep": "17:45", "plat": "3" },
+      { "tiploc": "DRLNGTN", "arr": "18:13", "dep": "18:15", "plat": "4" },
+      { "tiploc": "DRHM", "arr": "18:31", "dep": "18:32", "plat": "2" },
+      { "tiploc": "NWCSTLE", "arr": "18:47", "plat": "1" } ] }
+  ],
+  "timeline": [
+    { "type": "update", "at": "07:22", "ref": "PC1", "calls": [ { "tiploc": "NWCSTLE", "plat": "4", "platConfirmed": true } ] },
+    { "type": "update", "at": "07:40", "ref": "PC1", "calls": [ { "tiploc": "NWCSTLE", "atd": "07:40" } ] },
+    { "type": "update", "at": "08:20", "ref": "PC1", "calls": [ { "tiploc": "YORK", "plat": "9" } ] },
+    { "type": "update", "at": "08:37", "ref": "PC1", "calls": [ { "tiploc": "YORK", "ata": "08:37" } ] },
+    { "type": "update", "at": "17:33", "ref": "PC2", "calls": [ { "tiploc": "YORK", "plat": "11", "platConfirmed": true } ] },
+    { "type": "update", "at": "17:45", "ref": "PC2", "calls": [ { "tiploc": "YORK", "atd": "17:45" } ] }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "bst-change",
+  "description": "Mock: a service crossing midnight into the October clock change; its late arrival falls in the repeated hour after the clocks go back.",
+  "date": "2026-10-24",
+  "services": [
+    { "ref": "BST1", "uid": "MK8001", "toc": "GR", "headcode": "1N81", "calls": [
+      { "tiploc": "YORK", "dep": "23:58", "plat": "9" },
+      { "tiploc": "DRLNGTN", "arr": "00:45", "dep": "00:47", "plat": "4" },
+      { "tiploc": "DRHM", "arr": "01:10", "dep": "01:12", "plat": "2" },
+      { "tiploc": "NWCSTLE", "arr": "01:50", "plat": "1" } ] }
+  ],
+  "timeline": [
+    { "type": "update", "at": "23:58", "ref": "BST1", "calls": [ { "tiploc": "YORK", "atd": "23:58" } ] },
+    { "type": "update", "at": "01:27", "day": 1, "ref": "BST1", "calls": [ { "tiploc": "DRHM", "ata": "01:25", "atd": "01:27" } ] },
+    { "type": "update", "at": "01:10", "day": 1, "fold": "later", "ref": "BST1", "calls": [ { "tiploc": "NWCSTLE", "ata": "01:10" } ] }
+  ]
+}

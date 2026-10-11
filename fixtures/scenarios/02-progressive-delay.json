@@ -1,0 +1,29 @@
+{
+  "name": "progressive-delay",
+  "description": "Mock: a delay that grows past typical alert thresholds, then partly recovers.",
+  "services": [
+    { "ref": "PD1", "uid": "MK2001", "toc": "GR", "headcode": "1M21", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "07:25", "plat": "2" },
+      { "tiploc": "DRHM", "arr": "07:37", "dep": "07:38", "plat": "1" },
+      { "tiploc": "DRLNGTN", "arr": "07:54", "dep": "07:55", "plat": "1" },
+      { "tiploc": "YORK", "arr": "08:24", "plat": "9" } ] }
+  ],
+  "timeline": [
+    { "type": "update", "at": "07:20", "ref": "PD1", "calls": [
+      { "tiploc": "NWCSTLE", "etd": "07:28", "delayReason": "Mock reason: delayed by a late-running train in front" } ] },
+    { "type": "update", "at": "07:31", "ref": "PD1", "calls": [
+      { "tiploc": "NWCSTLE", "atd": "07:31" },
+      { "tiploc": "DRHM", "eta": "07:44", "etd": "07:45" },
+      { "tiploc": "DRLNGTN", "eta": "08:01", "etd": "08:02" },
+      { "tiploc": "YORK", "eta": "08:31" } ] },
+    { "type": "update", "at": "07:49", "ref": "PD1", "calls": [
+      { "tiploc": "DRHM", "ata": "07:47", "atd": "07:49" },
+      { "tiploc": "DRLNGTN", "eta": "08:07", "etd": "08:09" },
+      { "tiploc": "YORK", "eta": "08:42", "delayReason": "Mock reason: delayed by a signalling fault" } ] },
+    { "type": "update", "at": "08:09", "ref": "PD1", "calls": [
+      { "tiploc": "DRLNGTN", "ata": "08:07", "atd": "08:09" },
+      { "tiploc": "YORK", "eta": "08:40" } ] },
+    { "type": "update", "at": "08:25", "ref": "PD1", "calls": [ { "tiploc": "YORK", "eta": "08:38" } ] },
+    { "type": "update", "at": "08:38", "ref": "PD1", "calls": [ { "tiploc": "YORK", "ata": "08:38" } ] }
+  ]
+}

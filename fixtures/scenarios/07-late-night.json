@@ -1,0 +1,18 @@
+{
+  "name": "late-night",
+  "description": "Mock: a late-evening service that crosses midnight and arrives a little late.",
+  "services": [
+    { "ref": "LN1", "uid": "MK7001", "toc": "GR", "headcode": "1M71", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "23:40", "plat": "2" },
+      { "tiploc": "DRHM", "arr": "23:52", "dep": "23:53", "plat": "1" },
+      { "tiploc": "DRLNGTN", "arr": "00:08", "dep": "00:10", "plat": "1" },
+      { "tiploc": "YORK", "arr": "00:38", "plat": "9" } ] }
+  ],
+  "timeline": [
+    { "type": "update", "at": "23:42", "ref": "LN1", "calls": [ { "tiploc": "NWCSTLE", "atd": "23:42" } ] },
+    { "type": "update", "at": "00:14", "day": 1, "ref": "LN1", "calls": [
+      { "tiploc": "DRLNGTN", "ata": "00:12", "atd": "00:14" },
+      { "tiploc": "YORK", "eta": "00:43" } ] },
+    { "type": "update", "at": "00:43", "day": 1, "ref": "LN1", "calls": [ { "tiploc": "YORK", "ata": "00:43" } ] }
+  ]
+}

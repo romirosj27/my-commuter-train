@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# My Commuter Train
 
-## Getting Started
+Tracks a user's daily commuter trains in Great Britain, alerts them to changes,
+predicts knock-on disruption and helps with Delay Repay. See
+[docs/PLAN.md](docs/PLAN.md) for the design. The full README (deployment, all
+env vars) arrives in Phase 8.
 
-First, run the development server:
+> The previous Next.js/MongoDB prototype has moved to `legacy/` for reference.
+
+## Status
+
+Phase 1 is done: monorepo scaffold, docker-compose, database schema, reference
+data and mock feed adapters. `apps/api` and `apps/web` come in Phases 2–4.
+
+## Local setup
+
+Requires Node 22+, pnpm 10 and Docker (or a local Postgres 16 and Redis 7).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env
+docker compose up -d            # postgres + redis (add --profile mail for mailpit)
+pnpm db:migrate                 # creates pg_trgm and applies migrations
+pnpm db:seed                    # reference data + placeholder Delay Repay schemes
+pnpm typecheck && pnpm test
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running on mock data
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Every feed is behind an adapter, with `mock` and `live` implementations
+chosen per feed by `DARWIN_MODE`, `NETWORK_RAIL_MODE`, `HSP_MODE`,
+`INCIDENTS_MODE` and `REFERENCE_MODE`. Live adapters are placeholders until the
+official feed documentation is supplied.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The mocks replay the scenarios in `fixtures/scenarios/` against a simulated
+clock. To watch them:
 
-## Learn More
+```bash
+# replay from 06:30 on a given day at 60x speed
+MOCK_CLOCK_START=2026-11-10T06:30:00Z MOCK_CLOCK_SPEED=60 pnpm --filter @mct/worker replay
+```
 
-To learn more about Next.js, take a look at the following resources:
+`MOCK_SCENARIO` restricts replay to named scenarios (comma-separated). See
+[fixtures/README.md](fixtures/README.md) for the fixture format.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+apps/worker        feed adapters (mock + live placeholders); ingest and alerts from Phase 2
+packages/shared    domain types, zod schemas, time handling, adapter interfaces, demo reference data
+packages/db        Drizzle schema, migrations, seed
+fixtures/          mock scenarios
+legacy/            previous prototype (to be removed)
+```

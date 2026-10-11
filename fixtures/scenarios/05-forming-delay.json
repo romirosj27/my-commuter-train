@@ -1,0 +1,36 @@
+{
+  "name": "forming-delay",
+  "description": "Mock: the inbound working from York runs late and forms the user's 08:10 from Newcastle; the feed only updates the outbound forecast later.",
+  "services": [
+    { "ref": "FD0", "uid": "MK5000", "toc": "TP", "headcode": "1N50", "calls": [
+      { "tiploc": "YORK", "dep": "06:55", "plat": "4" },
+      { "tiploc": "DRLNGTN", "arr": "07:22", "dep": "07:23", "plat": "4" },
+      { "tiploc": "DRHM", "arr": "07:38", "dep": "07:39", "plat": "2" },
+      { "tiploc": "NWCSTLE", "arr": "07:52", "plat": "1" } ] },
+    { "ref": "FD1", "uid": "MK5001", "toc": "TP", "headcode": "1M51", "calls": [
+      { "tiploc": "NWCSTLE", "dep": "08:10", "plat": "1" },
+      { "tiploc": "DRHM", "arr": "08:22", "dep": "08:23", "plat": "2" },
+      { "tiploc": "DRLNGTN", "arr": "08:37", "dep": "08:38", "plat": "1" },
+      { "tiploc": "NTHALER", "arr": "08:50", "dep": "08:51", "plat": "2" },
+      { "tiploc": "YORK", "arr": "09:10", "plat": "5" } ] }
+  ],
+  "associations": [ { "main": "FD0", "assoc": "FD1", "kind": "forms", "tiploc": "NWCSTLE" } ],
+  "timeline": [
+    { "type": "update", "at": "06:50", "ref": "FD0", "calls": [
+      { "tiploc": "YORK", "etd": "07:15", "delayReason": "Mock reason: late running from a previous working" },
+      { "tiploc": "NWCSTLE", "eta": "08:12" } ] },
+    { "type": "update", "at": "07:18", "ref": "FD0", "calls": [
+      { "tiploc": "YORK", "atd": "07:18" },
+      { "tiploc": "DRLNGTN", "eta": "07:45", "etd": "07:46" },
+      { "tiploc": "NWCSTLE", "eta": "08:16" } ] },
+    { "type": "update", "at": "07:46", "ref": "FD0", "calls": [
+      { "tiploc": "DRLNGTN", "ata": "07:45", "atd": "07:47" },
+      { "tiploc": "NWCSTLE", "eta": "08:17" } ] },
+    { "type": "update", "at": "08:05", "ref": "FD1", "calls": [
+      { "tiploc": "NWCSTLE", "etd": "08:24", "delayReason": "Mock reason: late arrival of the train that forms this service" },
+      { "tiploc": "YORK", "eta": "09:24" } ] },
+    { "type": "update", "at": "08:18", "ref": "FD0", "calls": [ { "tiploc": "NWCSTLE", "ata": "08:18" } ] },
+    { "type": "update", "at": "08:25", "ref": "FD1", "calls": [ { "tiploc": "NWCSTLE", "atd": "08:25" } ] },
+    { "type": "update", "at": "09:23", "ref": "FD1", "calls": [ { "tiploc": "YORK", "ata": "09:23" } ] }
+  ]
+}
