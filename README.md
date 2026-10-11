@@ -20,6 +20,17 @@ Design notes: [docs/PLAN.md](docs/PLAN.md).
 
 *Screenshots from the app running on mock data.*
 
+**Demo mode:** a build of the web app with `VITE_DEMO=1` runs entirely in the browser, with no
+server. The `/api` calls are answered in the browser from the same mock scenarios and the same
+shared board, prediction and Delay Repay logic. A banner lets you jump the simulated clock (early,
+morning rush, disruption, evening). Accounts, commutes and journeys are saved in the browser's
+local storage; no emails are sent. This is what the Vercel preview serves until the real API is
+deployed. Try it locally with:
+
+```bash
+VITE_DEMO=1 pnpm --filter @mct/web build && pnpm --filter @mct/web preview
+```
+
 ## Contents
 
 - [Architecture](#architecture)
@@ -131,6 +142,7 @@ refuse to start with invalid values.
 | `DARWIN_MODE`, `NETWORK_RAIL_MODE`, `HSP_MODE`, `INCIDENTS_MODE`, `REFERENCE_MODE` | worker | `mock` or `live` (live adapters are placeholders) |
 | `MOCK_SCENARIO`, `MOCK_CLOCK_START`, `MOCK_CLOCK_SPEED` | worker | mock replay controls |
 | `VITE_API_URL` | web (build time) | the API's public URL in production; empty in dev |
+| `VITE_DEMO` | web (build time) | `1` builds the self-contained demo (no server); the Vercel build defaults to it |
 
 ## Data feeds
 
@@ -284,10 +296,11 @@ output directory `apps/web/dist`, and `VITE_API_URL=https://api.example.com`. `p
 handles client-side routes and `public/_headers` sets security and cache headers.
 
 **Web on Vercel (alternative):** `vercel.json` builds only the web app (framework Vite, output
-`apps/web/dist`, SPA fallback). Leave the project's Root Directory as the repository root. Vercel
-can't host the worker (it's always on), so the API and worker still run elsewhere (Fly.io or
-Railway). Set `VITE_API_URL` in the Vercel project's environment variables, and set `WEB_URL` on
-the API to the Vercel URL.
+`apps/web/dist`, SPA fallback). Leave the project's Root Directory as the repository root. By
+default it builds the **demo** (`VITE_DEMO=1`). To switch to the real app, set `VITE_DEMO=0` and
+`VITE_API_URL` in the Vercel project's environment variables. Vercel can't host the worker (it's
+always on), so the API and worker run elsewhere (Fly.io or Railway); set `WEB_URL` on the API to
+the Vercel URL.
 
 **Domains and cookies:** serve the web app and API from sibling subdomains of one domain (for
 example `app.example.com` and `api.example.com`) and set `COOKIE_DOMAIN=example.com`,

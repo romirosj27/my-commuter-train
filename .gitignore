@@ -7,3 +7,4 @@ coverage/
 .env.*
 !.env.example
 dump.rdb
+dist-demo/

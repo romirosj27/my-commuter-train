@@ -10,12 +10,16 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 import { LogOut, TrainFront } from 'lucide-react';
+import { lazy, Suspense } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { BoardPage } from '@/features/board/board-page';
 import { CheckEmailPage, ForgotPasswordPage, ResetPasswordPage, SignInPage, SignUpPage } from '@/features/auth/pages';
 import { authClient, sessionQuery } from '@/lib/auth';
 import { meQuery } from '@/lib/queries';
+
+// Only the demo build includes the demo banner (and the demo code it pulls in).
+const DemoBanner = import.meta.env.VITE_DEMO === '1' ? lazy(() => import('@/demo/banner').then((m) => ({ default: m.DemoBanner }))) : null;
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -84,6 +88,11 @@ function Header() {
 const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <div className="min-h-dvh">
+      {DemoBanner && (
+        <Suspense fallback={null}>
+          <DemoBanner />
+        </Suspense>
+      )}
       <Header />
       <main className="mx-auto max-w-3xl px-4 py-6">
         <Outlet />

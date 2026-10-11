@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api, errorMessage } from '@/lib/api';
+import { appNow } from '@/lib/clock';
 import { hm } from '@/lib/format';
 import { commutesQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
@@ -45,7 +46,7 @@ export const boardQuery = (commuteId: string, dir: Direction, date: string) =>
   });
 
 /** Before noon the outbound board is more useful; after, the return. */
-export function defaultDirection(now = new Date()): Direction {
+export function defaultDirection(now = appNow()): Direction {
   return toLondon(now).secondsOfDay < 12 * 3600 ? 'outbound' : 'return';
 }
 
@@ -72,7 +73,7 @@ export function BoardPage({ search }: { search: BoardSearch }) {
   const commute: CommuteDto | undefined = list.find((c) => c.id === search.commute) ?? list.find((c) => c.isDefault) ?? list[0];
   const dir = search.dir ?? defaultDirection();
   const day = search.day ?? 'today';
-  const today = toLondon(new Date()).date;
+  const today = toLondon(appNow()).date;
   const date = day === 'today' ? today : addDays(today, 1);
 
   const board = useQuery({ ...boardQuery(commute?.id ?? '', dir, date), enabled: !!commute });

@@ -12,6 +12,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api, errorMessage } from '@/lib/api';
+import { appNow } from '@/lib/clock';
 import { delayLabel, hm } from '@/lib/format';
 import {
   journeysQuery,
@@ -91,7 +92,7 @@ function SuggestionCard({ s, onEdit }: { s: Suggestion; onEdit: (s: Suggestion) 
 }
 
 function Suggestions({ onEdit }: { onEdit: (prefill: Partial<ManualValues>) => void }) {
-  const today = toLondon(new Date()).date;
+  const today = toLondon(appNow()).date;
   const [date, setDate] = useState(today);
   const { data, isPending, error } = useQuery(suggestionsQuery(date));
   return (
@@ -142,7 +143,7 @@ function ManualJourneyDialog({ prefill, onClose }: { prefill: Partial<ManualValu
   const qc = useQueryClient();
   const operators = useQuery(operatorsQuery);
   const [v, setV] = useState<ManualValues>({
-    travelDate: toLondon(new Date()).date,
+    travelDate: toLondon(appNow()).date,
     origin: null,
     dest: null,
     toc: '',

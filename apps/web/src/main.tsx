@@ -7,6 +7,10 @@ import { sessionQuery } from '@/lib/auth';
 import { createAppRouter } from './router';
 import './index.css';
 
+// Demo build: answer /api requests in the browser before anything fetches.
+// (The env check is written inline so normal builds drop the demo code entirely.)
+if (import.meta.env.VITE_DEMO === '1') (await import('./demo/install')).installDemo();
+
 const queryClient: QueryClient = new QueryClient({
   // A 401 from any query means the session has ended: go back to sign in.
   queryCache: new QueryCache({

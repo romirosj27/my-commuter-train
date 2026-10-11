@@ -10,7 +10,8 @@
     "./reference": "./src/reference/index.ts",
     "./feeds": "./src/feeds.ts",
     "./board": "./src/board.ts",
-    "./prediction": "./src/prediction/index.ts"
+    "./prediction": "./src/prediction/index.ts",
+    "./mock": "./src/mock/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

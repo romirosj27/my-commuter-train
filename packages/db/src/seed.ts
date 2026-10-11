@@ -2,22 +2,10 @@
  * Seeds reference data and placeholder Delay Repay schemes.
  * Demo users and commutes are added in Phase 3 (they need Better Auth's password hashing).
  */
-import { demoOperators, demoStations, demoTiplocs } from '@mct/shared';
+import { demoOperators, demoStations, demoTiplocs, PLACEHOLDER_BANDS } from '@mct/shared';
 import { createDb, type Db } from './index.ts';
 import { upsertReferenceData } from './reference.ts';
-import { delayRepaySchemes, type DelayRepayBand } from './schema.ts';
-
-/**
- * PLACEHOLDER bands — not taken from any operator's published terms. Every
- * scheme seeded with these has verifiedOn = null so the UI flags it. Replace
- * per operator after checking their current Delay Repay terms.
- */
-export const PLACEHOLDER_BANDS: DelayRepayBand[] = [
-  { minMinutes: 15, maxMinutes: 30, singlePct: 25, returnPct: 12.5 },
-  { minMinutes: 30, maxMinutes: 60, singlePct: 50, returnPct: 25 },
-  { minMinutes: 60, maxMinutes: 120, singlePct: 100, returnPct: 50 },
-  { minMinutes: 120, maxMinutes: null, singlePct: 100, returnPct: 100 },
-];
+import { delayRepaySchemes } from './schema.ts';
 
 export async function seed(db: Db): Promise<void> {
   await upsertReferenceData(db, { stations: demoStations, tiplocs: demoTiplocs, operators: demoOperators });
@@ -45,3 +33,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await handle.close();
   }
 }
+
+export { PLACEHOLDER_BANDS };

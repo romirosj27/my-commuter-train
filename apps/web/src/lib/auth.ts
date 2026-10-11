@@ -5,6 +5,8 @@ import { API_BASE } from './api';
 export const authClient = createAuthClient({
   baseURL: API_BASE || window.location.origin,
   basePath: '/api/auth',
+  // Look fetch up on each call (rather than capturing it now) so demo mode can answer requests.
+  fetchOptions: { customFetchImpl: (input, init) => window.fetch(input, init) },
 });
 
 export interface SessionInfo {

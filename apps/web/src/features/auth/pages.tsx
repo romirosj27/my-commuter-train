@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { authClient, authErrorMessage, sessionQuery } from '@/lib/auth';
+import { IS_DEMO } from '@/lib/demo-flag';
 import { AuthCard } from './auth-card';
 
 const origin = () => window.location.origin;
@@ -46,7 +47,8 @@ export function SignInPage({ redirect }: { redirect?: string }) {
   const submit = run(async () => {
     const { error } = await authClient.signIn.email({ email, password });
     if (error) throw new Error(authErrorMessage(error));
-    await qc.invalidateQueries({ queryKey: sessionQuery.queryKey });
+    // Fetch the new session now, so the signed-in pages' guard doesn't see a stale "signed out".
+    await qc.fetchQuery({ ...sessionQuery, staleTime: 0 });
     await navigate({ to: redirect && redirect.startsWith('/') ? redirect : '/' });
   });
 
@@ -68,6 +70,7 @@ export function SignInPage({ redirect }: { redirect?: string }) {
       }
     >
       <form onSubmit={submit} className="grid gap-4">
+        {IS_DEMO && <p className="text-muted-foreground text-sm">Demo: any email and password will sign you in.</p>}
         <Field label="Email" htmlFor="email">
           <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
@@ -89,11 +92,18 @@ export function SignUpPage() {
   const [password, setPassword] = useState('');
   const { pending, error, run } = useSubmit();
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const submit = run(async () => {
     if (password.length < 10) throw new Error('Use at least 10 characters for your password.');
     const { error } = await authClient.signUp.email({ name, email, password, callbackURL: `${origin()}/` });
     if (error) throw new Error(authErrorMessage(error));
+    if (IS_DEMO) {
+      // No email in the demo: go straight in.
+      await qc.fetchQuery({ ...sessionQuery, staleTime: 0 });
+      await navigate({ to: '/' });
+      return;
+    }
     await navigate({ to: '/check-email', search: { email } });
   });
 

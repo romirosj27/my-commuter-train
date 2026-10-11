@@ -6,6 +6,7 @@
  * ReferenceDataSource will replace it once the source is agreed. Treat the
  * TIPLOCs in particular as needing checking against official data.
  */
+import type { DelayRepayBand } from '../delay-repay.ts';
 import type { Operator, Station, Tiploc } from '../schemas/index.ts';
 
 export const REFERENCE_DATA_VERIFIED = false;
@@ -53,3 +54,16 @@ const tiplocToCrs = new Map(demoTiplocs.map((t) => [t.tiploc, t.crs]));
 export function demoCrsForTiploc(tiploc: string): string | null {
   return tiplocToCrs.get(tiploc) ?? null;
 }
+
+/**
+ * PLACEHOLDER bands — not taken from any operator's published terms. Every
+ * scheme seeded with these has verifiedOn = null so the UI flags it. Replace
+ * per operator after checking their current Delay Repay terms.
+ */
+export const PLACEHOLDER_BANDS: DelayRepayBand[] = [
+  { minMinutes: 15, maxMinutes: 30, singlePct: 25, returnPct: 12.5 },
+  { minMinutes: 30, maxMinutes: 60, singlePct: 50, returnPct: 25 },
+  { minMinutes: 60, maxMinutes: 120, singlePct: 100, returnPct: 50 },
+  { minMinutes: 120, maxMinutes: null, singlePct: 100, returnPct: 100 },
+];
+
