@@ -14,6 +14,12 @@ The whole app runs end to end on **mock feed data**. Real rail feeds plug in beh
 once their official documentation is supplied (see [Data feeds](#data-feeds)).
 Design notes: [docs/PLAN.md](docs/PLAN.md).
 
+| Board | Train detail | Journeys | Alert email |
+|---|---|---|---|
+| ![Board](docs/screenshots/02-board.png) | ![Train detail](docs/screenshots/03-service-detail.png) | ![Journeys](docs/screenshots/06-journeys.png) | ![Alert email](docs/screenshots/07-alert-email.png) |
+
+*Screenshots from the app running on mock data.*
+
 ## Contents
 
 - [Architecture](#architecture)
