@@ -11,6 +11,8 @@ const schema = z.object({
   API_PUBLIC_URL: z.string().url().default('http://localhost:5173'),
   /** Public URL of the web app (CORS origin; auth redirects must point here). */
   WEB_URL: z.string().url().default('http://localhost:5173'),
+  /** Parent domain for the session cookie when web and API are on sibling subdomains. */
+  COOKIE_DOMAIN: z.string().optional(),
   BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),
   RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(300),
   AUTH_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(30),

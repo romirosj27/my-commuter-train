@@ -47,6 +47,8 @@ export interface AppOptions {
   predictionConfig?: PredictionConfig;
   /** Users allowed to edit Delay Repay schemes. */
   adminEmails?: string[];
+  /** Parent domain for cookies shared by sibling subdomains (production). */
+  cookieDomain?: string;
 }
 
 export async function buildApp(opts: AppOptions) {
@@ -73,6 +75,7 @@ export async function buildApp(opts: AppOptions) {
       webURL: opts.webURL,
       trustedOrigins: [],
       rateLimit: opts.authInternalRateLimit ?? true,
+      cookieDomain: opts.cookieDomain,
     }),
   };
 

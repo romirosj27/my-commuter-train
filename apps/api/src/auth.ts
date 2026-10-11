@@ -14,6 +14,11 @@ export interface AuthOptions {
   trustedOrigins: string[];
   /** Better Auth's own per-endpoint limiter; off in tests. */
   rateLimit?: boolean;
+  /**
+   * Parent domain for the session cookie when the web app and API are on
+   * sibling subdomains (e.g. app.example.com and api.example.com → "example.com").
+   */
+  cookieDomain?: string;
 }
 
 export function createAuth(o: AuthOptions) {
@@ -68,6 +73,7 @@ export function createAuth(o: AuthOptions) {
     },
     advanced: {
       useSecureCookies: o.baseURL.startsWith('https://'),
+      ...(o.cookieDomain ? { crossSubDomainCookies: { enabled: true, domain: o.cookieDomain } } : {}),
     },
   });
 }

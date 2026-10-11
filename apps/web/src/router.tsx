@@ -1,15 +1,19 @@
 import { QueryClient, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createRootRouteWithContext, createRoute, createRouter, Link, Outlet, redirect, useNavigate } from '@tanstack/react-router';
+import {
+  createRootRouteWithContext,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+  Link,
+  Outlet,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router';
 import { LogOut, TrainFront } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { AccountPage } from '@/features/account/page';
-import { SchemesAdminPage } from '@/features/admin/schemes-page';
 import { BoardPage } from '@/features/board/board-page';
-import { ServicePage } from '@/features/board/service-page';
 import { CheckEmailPage, ForgotPasswordPage, ResetPasswordPage, SignInPage, SignUpPage } from '@/features/auth/pages';
-import { CommutesPage, EditCommutePage, NewCommutePage } from '@/features/commutes/pages';
-import { JourneysPage } from '@/features/journeys/journeys-page';
 import { authClient, sessionQuery } from '@/lib/auth';
 import { meQuery } from '@/lib/queries';
 
@@ -155,6 +159,11 @@ const appRoute = createRoute({
   },
 });
 
+// Less-used pages load on demand (the board, the home page, stays in the main bundle).
+const commutesPages = () => import('@/features/commutes/pages');
+const ServicePage = lazyRouteComponent(() => import('@/features/board/service-page'), 'ServicePage');
+const EditCommutePage = lazyRouteComponent(commutesPages, 'EditCommutePage');
+
 const indexRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/',
@@ -180,8 +189,8 @@ const serviceRoute = createRoute({
     return <ServicePage key={serviceId} id={serviceId} fromCrs={from} toCrs={to} />;
   },
 });
-const commutesRoute = createRoute({ getParentRoute: () => appRoute, path: '/commutes', component: CommutesPage });
-const newCommuteRoute = createRoute({ getParentRoute: () => appRoute, path: '/commutes/new', component: NewCommutePage });
+const commutesRoute = createRoute({ getParentRoute: () => appRoute, path: '/commutes', component: lazyRouteComponent(commutesPages, 'CommutesPage') });
+const newCommuteRoute = createRoute({ getParentRoute: () => appRoute, path: '/commutes/new', component: lazyRouteComponent(commutesPages, 'NewCommutePage') });
 const editCommuteRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/commutes/$commuteId',
@@ -189,9 +198,21 @@ const editCommuteRoute = createRoute({
     return <EditCommutePage id={editCommuteRoute.useParams().commuteId} />;
   },
 });
-const accountRoute = createRoute({ getParentRoute: () => appRoute, path: '/account', component: AccountPage });
-const journeysRoute = createRoute({ getParentRoute: () => appRoute, path: '/journeys', component: JourneysPage });
-const adminSchemesRoute = createRoute({ getParentRoute: () => appRoute, path: '/admin/delay-repay', component: SchemesAdminPage });
+const accountRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/account',
+  component: lazyRouteComponent(() => import('@/features/account/page'), 'AccountPage'),
+});
+const journeysRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/journeys',
+  component: lazyRouteComponent(() => import('@/features/journeys/journeys-page'), 'JourneysPage'),
+});
+const adminSchemesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/admin/delay-repay',
+  component: lazyRouteComponent(() => import('@/features/admin/schemes-page'), 'SchemesAdminPage'),
+});
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([signInRoute, signUpRoute, checkEmailRoute, forgotRoute, resetRoute]),

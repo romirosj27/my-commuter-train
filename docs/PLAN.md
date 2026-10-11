@@ -1,6 +1,6 @@
 # UK rail commute tracker — MVP plan
 
-Status: **approved**. Phase 1 complete.
+Status: **approved**. All eight phases built; see the README for what changed during the build.
 
 Conventions used throughout:
 

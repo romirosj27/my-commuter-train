@@ -21,6 +21,7 @@ const app = await buildApp({
   authRateLimitPerMin: env.AUTH_RATE_LIMIT_PER_MIN,
   predictionConfig: predictionConfigFromJson(env.PREDICTION_CONFIG),
   adminEmails: env.ADMIN_EMAILS.split(','),
+  cookieDomain: env.COOKIE_DOMAIN || undefined,
   logger: {
     level: env.LOG_LEVEL,
     redact: ['req.headers.authorization', 'req.headers.cookie'],

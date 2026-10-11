@@ -1,0 +1,35 @@
+# Fly.io: worker (always on; no public HTTP). Deploy from the repo root:
+#   fly deploy --config infra/fly/worker.toml
+# Uses the same database, Redis and email secrets as the API.
+app = "my-commuter-train-worker"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "../../Dockerfile"
+  [build.args]
+    APP = "worker"
+
+[env]
+  NODE_ENV = "production"
+  WORKER_HEALTH_PORT = "8081"
+  EMAIL_TRANSPORT = "resend"
+  # Feed modes stay "mock" until the live adapters are implemented.
+  DARWIN_MODE = "mock"
+  NETWORK_RAIL_MODE = "mock"
+  HSP_MODE = "mock"
+  INCIDENTS_MODE = "mock"
+  REFERENCE_MODE = "mock"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Health is checked on the private port; the worker must never scale to zero.
+[checks]
+  [checks.health]
+    type = "http"
+    port = 8081
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
